@@ -2,7 +2,7 @@
   "name": "hardhat-cantrips",
   "version": "1.0.0",
   "description": "A plug-in with tasks that help you to quickly create and manage certain types of contracts.",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"tests must be implemented\" && exit 1"
   },
