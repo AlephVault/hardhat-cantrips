@@ -1,0 +1,64 @@
+// SPDX-License-Identifier: MIT
+pragma solidity #SOLIDITY_VERSION#;
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+
+
+/**
+ * This is a fungible token contract which is related
+ * to an owner.
+ *
+ * Feel free to edit these notes accordingly, but not
+ * before reading these notes first:
+ *
+ * Ideally, after setup, transferOwnership should be
+ * invoked to transfer the ownership of this contract
+ * to a new address which should be another contract.
+ * This ensures that the ownership of this contract is
+ * fair and related to a greater logic or ruleset.
+ */
+contract #SCRIPTNAME# is ERC20, Ownable {
+    /**
+     * Feel free to setup your ERC20 name and symbol as you please.
+     */
+    constructor() ERC20("My Token", "MYTK") Ownable(msg.sender) {}
+
+    /**
+     * Feel free to either uncomment+modify or remove this method.
+     * This one is needed if somehow you want to express that your
+     * ERC20 token needs to be expressed in units other than 1 eth.
+     *
+     * Here, "18" means that one entire token is 1e18 (one with 18
+     * zeroes). This is typically a sensible, default, and widely
+     * used value to state how many decimal positions belong to one
+     * single unit of the token.
+     *
+     * function decimals() public view virtual returns (uint8) {
+     *    return 18;
+     * }
+     */
+
+    /**
+     * Mints an amount of tokens for an account. Only the owner is
+     * allowed to execute this action.
+     */
+    function mint(address account, uint256 amount) onlyOwner public {
+        _mint(account, amount);
+    }
+
+    /*
+     * Feel free to either uncomment or remove this method (or also
+     * change who is allowed to burn, if not both subjects, the tokens
+     * held by an owner) and its corresponding error.
+     *
+     * error InvalidBurner(address sender);
+     *
+     * function burn(address account, uint256 amount) public {
+     *     address sender = _msgSender();
+     *     if (owner() != sender && account != sender) {
+     *         revert InvalidBurner(sender);
+     *     }
+     *     _burn(account, amount);
+     * }
+     */
+}
