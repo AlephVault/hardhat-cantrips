@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity #SOLIDITY_VERSION#;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
@@ -14,7 +14,7 @@ import "@openzeppelin/contracts/utils/Base64.sol";
  * Your contract should define a way to mint tokens, and
  * optionally a way to burn tokens.
  */
-contract NewERC721 is ERC721 {
+contract #SCRIPTNAME# is ERC721 {
     /**
      * Feel free to setup your ERC721 name and symbol as you please.
      */
