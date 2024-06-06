@@ -1,0 +1,69 @@
+// SPDX-License-Identifier: UNLICENSED
+pragma solidity #SOLIDITY_VERSION#;
+
+import "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
+import "@openzeppelin/contracts/utils/Base64.sol";
+
+/**
+ * This is a general-purpose (FT, NFT, SFT) token contract
+ * which is related to an owner.
+ *
+ * Feel free to edit these notes accordingly, but after
+ * reading these notes first:
+ *
+ * Your contract should define a way to mint tokens,
+ * and optionally a way to burn tokens.
+ */
+ */
+contract #SCRIPTNAME# is ERC1155 {
+    /**
+     * The URL is not needed here: we'll generate proper data
+     * URIs for each token.
+     */
+    constructor() ERC1155("about:blank") {}
+
+    /**
+     * Implement your own logic to mint tokens by invoking _safeMint
+     * at some point inside one of your methods. The invocation must
+     * be like these:
+     *     _mint(account, tokenId, tokenAmount, "someBinaryData")
+     *     _mintBatch(account, tokenIds, tokenAmounts, "someBinaryData")
+     * Where tokenIds and tokenAmounts are uint256[] memory.
+     *
+     * Also, you can implement your own logic to burn those tokens.
+     * The syntax is like these:
+     *     _burn(account, tokenId, tokenAmount)
+     *     _burnBatch(account, tokenIds, tokenAmounts)
+     * Where tokenIds and tokenAmounts are uint256[] memory.
+     *
+     * Don't allow those operations without prior clear rules.
+     */
+
+    /**
+     * Retrieves the metadata of the token.
+     */
+    function _getTokenMetadata(uint256 id) internal view returns (
+        string memory name, string memory description, string memory image
+    ) {
+        // TODO Feel free to revert somehow if the token does not exist.
+        // TODO also, feel free to return more data if needed for your
+        // TODO "properties" sub-dictionary below.
+        name = "";
+        description = "";
+        image = "";
+    }
+
+    /**
+     * Retrieves a JSON with the metadata of the token.
+     * See https://eips.ethereum.org/EIPS/eip-721 for more details.
+     */
+    function uri(uint256 id) public view override returns (string memory) {
+        (string memory name, string memory description, string memory image) = _getTokenMetadata(id);
+
+        // Feel free to add more things to the "properties" sub-dictionary.
+        return string(abi.encodePacked("data:application/json;base64,", Base64.encode(abi.encodePacked(
+            '{"name":"', name, '","description":"', description, '","image":"', image,
+            '","properties":{}}'
+        ))));
+    }
+}
