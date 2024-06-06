@@ -1,0 +1,83 @@
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.19;
+
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Base64.sol";
+
+/**
+ * This is a non-fungible token contract which is related
+ * to an owner.
+ *
+ * Feel free to edit these notes accordingly, but after
+ * reading these notes first:
+ *
+ * Ideally, after setup, transferOwnership should be
+ * invoked to transfer the ownership of this contract to a
+ * new address which should be another contract. This ensures
+ * that the ownership of this contract is fair and related to
+ * a greater logic or ruleset.
+ */
+contract NewERC721 is ERC721, Ownable {
+    /**
+     * Feel free to setup your ERC721 name and symbol as you please.
+     */
+    constructor() ERC721("My Collection", "MYCL") Ownable(msg.sender) {}
+
+    /**
+     * Mints a specific token for an account. Only the owner is
+     * allowed to execute this action.
+     */
+    function safeMint(address to, uint256 tokenId) public onlyOwner {
+        _safeMint(to, tokenId);
+    }
+
+    /**
+     * Mints a specific token for an account. Only the owner is
+     * allowed to execute this action.
+     */
+    function safeMint(address to, uint256 tokenId, bytes memory data) public onlyOwner {
+        _safeMint(to, tokenId, data);
+    }
+
+    /*
+     * Feel free to either uncomment or remove this method (or also
+     * change who is allowed to burn, if not both subjects, the token
+     * held by an owner) and its corresponding error.
+     *
+     * error InvalidBurner(address sender);
+     *
+     * function burn(uint256 tokenId) public {
+     *     address sender = _msgSender();
+     *     if (owner() != sender && ownerOf(tokenId) != sender) {
+     *         revert InvalidBurner(sender);
+     *     }
+     *    _burn(tokenId);
+     * }
+     */
+
+    /**
+     * Retrieves the metadata of the token.
+     */
+    function _getTokenMetadata(uint256 tokenId) internal view returns (
+        string memory name, string memory description, string memory image
+    ) {
+        _requireOwned(tokenId);
+        // TODO implement the actual retrieval here.
+        name = "";
+        description = "";
+        image = "";
+    }
+
+    /**
+     * Retrieves a JSON with the metadata of the token.
+     * See https://eips.ethereum.org/EIPS/eip-721 for more details.
+     */
+    function tokenURI(uint256 tokenId) public override view returns (string memory) {
+        (string memory name, string memory description, string memory image) = _getTokenMetadata(tokenId);
+
+        return string(abi.encodePacked("data:application/json;base64,", Base64.encode(abi.encodePacked(
+           '{"name:","', name, '", "description": "', description, '", "image": "', image, '"}'
+        ))));
+    }
+}
