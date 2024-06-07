@@ -71,7 +71,19 @@ const OPTIONS = [
     {name: "OwnedERC721", message: "An owned, OpenZeppelin-powered, ERC721 contract file"},
     {name: "ERC1155", message: "A regular, OpenZeppelin-powered, ERC1155 contract file"},
     {name: "OwnedERC1155", message: "An owned, OpenZeppelin-powered, ERC1155 contract file"},
+    {name: "PriceFeed", message: "A ChainLink PriceFeed contract mock"}
 ]
+
+
+const PATHS = {
+    ERC20: "contracts/ERC20",
+    OwnedERC20: "contracts/OwnedERC20",
+    ERC721: "contracts/ERC721",
+    OwnedERC721: "contracts/OwnedERC721",
+    ERC1155: "contracts/ERC1155",
+    OwnedERC1155: "contracts/OwnedERC1155",
+    PriceFeed: "contracts/chainlink/PriceFeed",
+}
 
 
 async function selectContractType(contractType) {
@@ -109,7 +121,8 @@ cantripsScope.task("generate-contract")
             const contractType = await selectContractType();
             const contractName = await inputContractName(contractType);
             const solidityVersion = await selectSolidityVersion(hre);
-            const sourceTemplate = `contracts/${contractType}.sol.template`;
+            const contractPath = PATHS[contractType];
+            const sourceTemplate = `${contractPath}.sol.template`;
             const targetPath = path.resolve(contractsPath, `${contractName}.sol`);
             const replacements = {
                 SOLIDITY_VERSION: solidityVersion,
