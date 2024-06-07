@@ -71,7 +71,7 @@ const OPTIONS = [
     {name: "OwnedERC721", message: "An owned, OpenZeppelin-powered, ERC721 contract file"},
     {name: "ERC1155", message: "A regular, OpenZeppelin-powered, ERC1155 contract file"},
     {name: "OwnedERC1155", message: "An owned, OpenZeppelin-powered, ERC1155 contract file"},
-    {name: "PriceFeed", message: "A ChainLink PriceFeed contract mock"}
+    {name: "PriceFeed", message: "A ChainLink PriceFeed contract mock file"}
 ]
 
 
