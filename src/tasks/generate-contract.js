@@ -1,7 +1,7 @@
 const {applyTemplate} = require("../utils/templates");
 const enquirer = require("enquirer");
 const path = require("path");
-const {cantripsScope} = require("./common");
+const {cantripsScope, inputUntil} = require("./common");
 
 
 cantripsScope.task("show-config")
@@ -95,18 +95,10 @@ async function selectContractType(contractType) {
 }
 
 
-async function inputContractName(contractType) {
-    while(true) {
-        const contractName = await new enquirer.Input({
-            message: "Give a name to your contract:",
-            initial: contractType
-        }).run();
-        if (!/[A-Za-z][A-Za-z0-9]*/.test(contractName)) {
-            console.error("Invalid contract name");
-        } else {
-            return contractName;
-        }
-    }
+function inputContractName(contractType) {
+    return inputUntil(contractType, "Give a name to your contract:", (contractName) => {
+        return /[A-Za-z][A-Za-z0-9]*/.test(contractName);
+    }, "Invalid contract name");
 }
 
 
@@ -117,9 +109,6 @@ cantripsScope.task("generate-contract")
             const contractType = await selectContractType();
             const contractName = await inputContractName(contractType);
             const solidityVersion = await selectSolidityVersion(hre);
-            console.log("The chosen contract type is:", contractType);
-            console.log("The chosen contract name is:", contractName);
-            console.log("The solidity version to use is:", solidityVersion);
             const sourceTemplate = `contracts/${contractType}.sol.template`;
             const targetPath = path.resolve(contractsPath, `${contractName}.sol`);
             const replacements = {
