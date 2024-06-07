@@ -28,5 +28,8 @@
   },
   "peerDependencies": {
     "hardhat": "^2.22.5"
+  },
+  "dependencies": {
+    "enquirer": "^2.4.1"
   }
 }
