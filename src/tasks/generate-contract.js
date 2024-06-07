@@ -1,6 +1,6 @@
 const {applyTemplate} = require("../utils/templates");
 const enquirer = require("enquirer");
-const {resolve} = require("path");
+const path = require("path");
 const {cantripsScope} = require("./common");
 
 
@@ -121,7 +121,7 @@ cantripsScope.task("generate-contract")
             console.log("The chosen contract name is:", contractName);
             console.log("The solidity version to use is:", solidityVersion);
             const sourceTemplate = `contracts/${contractType}.sol.template`;
-            const targetPath = resolve(contractsPath, `${contractName}.sol`);
+            const targetPath = path.resolve(contractsPath, `${contractName}.sol`);
             const replacements = {
                 SOLIDITY_VERSION: solidityVersion,
                 CONTRACT_NAME: contractName
