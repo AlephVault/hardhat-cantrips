@@ -15,7 +15,7 @@ import "@openzeppelin/contracts/utils/Base64.sol";
  * and optionally a way to burn tokens.
  */
  */
-contract #SCRIPTNAME# is ERC1155 {
+contract #CONTRACT_NAME# is ERC1155 {
     /**
      * The URL is not needed here: we'll generate proper data
      * URIs for each token.

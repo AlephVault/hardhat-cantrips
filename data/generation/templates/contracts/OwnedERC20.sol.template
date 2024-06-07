@@ -17,7 +17,7 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  * This ensures that the ownership of this contract is
  * fair and related to a greater logic or ruleset.
  */
-contract #SCRIPTNAME# is ERC20, Ownable {
+contract #CONTRACT_NAME# is ERC20, Ownable {
     /**
      * Feel free to setup your ERC20 name and symbol as you please.
      */
