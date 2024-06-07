@@ -1,11 +1,10 @@
-const { task, scope } = require("hardhat/config");
-const { applyTemplate } = require("../utils/templates");
+const {applyTemplate} = require("../utils/templates");
 const enquirer = require("enquirer");
 const {resolve} = require("path");
-const myScope = scope("cantrips", "Many generators and quick helpers");
+const {cantripsScope} = require("./common");
 
 
-myScope.task("show-config")
+cantripsScope.task("show-config")
     .setAction(({}, hre, runSuper) => {
         console.log("Config: ", hre.config);
         console.log("Solidity: ", hre.config.solidity.compilers);
@@ -111,7 +110,7 @@ async function inputContractName(contractType) {
 }
 
 
-myScope.task("generate-contract")
+cantripsScope.task("generate-contract")
     .setAction(async ({}, hre, runSuper) => {
         try {
             const contractsPath = hre.config.paths.sources;
@@ -132,10 +131,4 @@ myScope.task("generate-contract")
         } catch(e) {
             console.error(e);
         }
-    });
-
-
-myScope.task("generate-ignition")
-    .setAction(async ({}, hre, runSuper) => {
-
     });
