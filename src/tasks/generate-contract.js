@@ -114,7 +114,7 @@ function inputContractName(contractType) {
 }
 
 
-cantripsScope.task("generate-contract")
+cantripsScope.task("generate-contract", "Generates a contract file from a supported contract type")
     .setAction(async ({}, hre, runSuper) => {
         try {
             const contractsPath = hre.config.paths.sources;

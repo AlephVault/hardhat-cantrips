@@ -65,7 +65,7 @@ function inputDeploymentName(contractName) {
 }
 
 
-cantripsScope.task("generate-deployment")
+cantripsScope.task("generate-deployment", "Generates a deployment file for an existing contract")
     .setAction(async ({}, hre, runSuper) => {
         try {
             const ignitionPath = path.resolve(hre.config.paths.root, "ignition", "modules");
