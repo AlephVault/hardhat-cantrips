@@ -5,30 +5,7 @@ const path = require("path");
 const fs = require("fs");
 const {cantripsScope} = require("./common");
 const {inputUntil} = require("../utils/input");
-
-
-function traverseDirectory(directory, callback)
-{
-    let files = [];
-
-    try {
-        files = fs.readdirSync(directory);
-    } catch(e) {
-        throw new Error(
-            `It seems that ${directory} is not a directory.`
-        );
-    }
-
-    files.forEach(file => {
-        const subPath = path.join(directory, file);
-        const stat = fs.statSync(subPath);
-        if (stat.isDirectory()) {
-            traverseDirectory(subPath, callback);
-        } else {
-            callback(subPath, file);
-        }
-    });
-}
+const traverseDirectory = require("../utils/common");
 
 
 function collectContractNames(hre) {
