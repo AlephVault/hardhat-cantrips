@@ -3,7 +3,8 @@ const {applyTemplate} = require("../utils/templates");
 const enquirer = require("enquirer");
 const path = require("path");
 const fs = require("fs");
-const {cantripsScope, inputUntil} = require("./common");
+const {cantripsScope} = require("./common");
+const {inputUntil} = require("../utils/input");
 
 
 function traverseDirectory(directory, callback)
@@ -14,7 +15,7 @@ function traverseDirectory(directory, callback)
         files = fs.readdirSync(directory);
     } catch(e) {
         throw new Error(
-            `It seems that ${directory} is not a directory`
+            `It seems that ${directory} is not a directory.`
         );
     }
 
@@ -61,7 +62,7 @@ async function selectContract(hre) {
 function inputDeploymentName(contractName) {
     return inputUntil(contractName, "Give a name to your deployment", (deploymentName) => {
         return /[A-Za-z][A-Za-z0-9]*/.test(deploymentName);
-    }, "Invalid deployment name");
+    }, "Invalid deployment name.");
 }
 
 
@@ -79,7 +80,7 @@ cantripsScope.task("generate-deployment", "Generates a deployment file for an ex
                 CONTRACT_NAME: contractName
             }
             applyTemplate(sourceTemplate, replacements, targetPath);
-            console.log(`Deployment ${targetPath} successfully created`);
+            console.log(`Deployment ${targetPath} successfully created.`);
         } catch(e) {
             console.error(e);
         }

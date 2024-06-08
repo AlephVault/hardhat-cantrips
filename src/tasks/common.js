@@ -5,6 +5,5 @@ const {inputUntil} = require("../utils/input");
 
 
 module.exports = {
-    cantripsScope: scope_,
-    inputUntil
+    cantripsScope: scope_
 }

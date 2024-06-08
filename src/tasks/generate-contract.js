@@ -1,7 +1,8 @@
 const {applyTemplate} = require("../utils/templates");
 const enquirer = require("enquirer");
 const path = require("path");
-const {cantripsScope, inputUntil} = require("./common");
+const {cantripsScope} = require("./common");
+const {inputUntil} = require("../utils/input");
 
 
 cantripsScope.task("show-config")
@@ -90,7 +91,7 @@ async function selectContractType(contractType) {
     contractType = (contractType || "").trim();
     if (contractType && !OPTIONS.find((e) => e.name === contractType))
     {
-        console.error(`You've chosen a contract type not (yet) supported: ${contractType}`);
+        console.error(`You've chosen a contract type not (yet) supported: ${contractType}.`);
         contractType = "";
     }
 
@@ -110,7 +111,7 @@ async function selectContractType(contractType) {
 function inputContractName(contractType) {
     return inputUntil(contractType, "Give a name to your contract:", (contractName) => {
         return /[A-Za-z][A-Za-z0-9]*/.test(contractName);
-    }, "Invalid contract name");
+    }, "Invalid contract name.");
 }
 
 
@@ -129,7 +130,7 @@ cantripsScope.task("generate-contract", "Generates a contract file from a suppor
                 CONTRACT_NAME: contractName
             }
             applyTemplate(sourceTemplate, replacements, targetPath);
-            console.log(`Contract ${targetPath} successfully created`)
+            console.log(`Contract ${targetPath} successfully created.`)
         } catch(e) {
             console.error(e);
         }
