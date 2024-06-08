@@ -1,6 +1,6 @@
-import fs from "fs";
-import path from "path";
-import {traverseDirectory} from "./common";
+const fs = require("fs");
+const path = require("path");
+const {traverseDirectory} = require("./common");
 
 
 /**
