@@ -5,24 +5,7 @@ const path = require("path");
 const fs = require("fs");
 const {cantripsScope} = require("./common");
 const {inputUntil} = require("../utils/input");
-const traverseDirectory = require("../utils/common");
-
-
-function collectContractNames(hre) {
-    let contractNames = [];
-
-    let stat = fs.statSync(path.resolve(hre.config.paths.artifacts, "contracts"));
-    if (stat.isDirectory()) {
-        traverseDirectory(path.resolve(hre.config.paths.artifacts, "contracts"), (subPath, filename) => {
-            if (filename.endsWith('.json') && !filename.endsWith('.dbg.json')) {
-                const contractName = path.basename(filename, '.json');
-                contractNames.push(contractName);
-            }
-        });
-    }
-
-    return contractNames;
-}
+const {collectContractNames} = require("../utils/contracts");
 
 
 async function selectContract(hre) {
