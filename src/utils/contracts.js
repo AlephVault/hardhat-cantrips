@@ -10,13 +10,17 @@ const {traverseDirectory} = require("./common");
  */
 function collectContractNames(hre) {
     let contractNames = [];
-
-    let stat = fs.statSync(path.resolve(hre.config.paths.artifacts, "contracts"));
+    let contractArtifactsDirectoryName = path.resolve(hre.config.paths.artifacts, "contracts");
+    let startPos = contractArtifactsDirectoryName.length + 1;
+    let stat = fs.statSync(contractArtifactsDirectoryName);
     if (stat.isDirectory()) {
-        traverseDirectory(path.resolve(hre.config.paths.artifacts, "contracts"), (subPath, filename) => {
+        traverseDirectory(contractArtifactsDirectoryName, (subPath, filename) => {
             if (filename.endsWith('.json') && !filename.endsWith('.dbg.json')) {
                 const contractName = path.basename(filename, '.json');
-                contractNames.push(contractName);
+                contractNames.push({
+                    name: contractName,
+                    path: subPath.substring(startPos)
+                });
             }
         });
     }

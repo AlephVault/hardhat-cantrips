@@ -10,10 +10,36 @@ const {collectContractNames} = require("../utils/contracts");
 
 async function selectContract(hre) {
     const contractNames = collectContractNames(hre);
+
+    let uniqueChoices = [];
+    let repeatedChoices = [];
+    contractNames.forEach(({name, path}) => {
+        if (uniqueChoices.indexOf(name) >= 0) {
+            if (repeatedChoices.indexOf(name) < 0) {
+                console.warn(
+                    `The name '${name}' seems to be repeated. While the deployment ` +
+                    `script can be generated, it will indeed raise an error on execution ` +
+                    `due to the conflicting artifact name. While future ignition versions ` +
+                    `might support this (by specifying full artifact paths), as of today ` +
+                    `it is not. So it will not be included in the list of available options.`
+                );
+                repeatedChoices.push(name);
+            }
+        } else {
+            uniqueChoices.push(name);
+        }
+    });
+
+    const choices = contractNames.filter(({name}) => {
+        return repeatedChoices.indexOf(name) < 0;
+    }).map(({name, path}) => {
+        return {name: name, message: `${name} (artifact: artifacts/contracts/${path})`};
+    });
+
     let prompt = new enquirer.Select({
         name: "contractType",
         message: "Select a contract to deploy:",
-        choices: contractNames
+        choices
     });
     return await prompt.run();
 }
