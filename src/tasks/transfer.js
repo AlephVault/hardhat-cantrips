@@ -2,7 +2,7 @@ const {applyTemplate} = require("../utils/templates");
 const enquirer = require("enquirer");
 const path = require("path");
 const {cantripsScope, inputUntil} = require("./common");
-const {parseAddress, parseAccount} = require("../utils/accounts");
+const {parseSmartAddress, parseAccount} = require("../utils/accounts");
 const {parseAmount} = require("../utils/amounts");
 
 
@@ -13,7 +13,7 @@ cantripsScope.task("transfer", "Sends ETH from an account (by index) to another 
     .setAction(async ({ fromAccount, amount, toAccount }, hre, runSuper) => {
         try {
             const fromAddress = await parseAccount(fromAccount, hre);
-            const toAddress = await parseAddress(toAccount, hre);
+            const toAddress = await parseSmartAddress(toAccount, hre);
             const nativeAmount = parseAmount(amount, hre);
             await (await hre.ethers.getSigners())[parseInt(fromAccount)].sendTransaction({
                 to: toAddress, value: nativeAmount
