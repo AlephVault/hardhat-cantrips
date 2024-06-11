@@ -6,6 +6,7 @@ const fs = require("fs");
 const {cantripsScope} = require("./common");
 const {inputUntil} = require("../utils/input");
 const {collectContractNames} = require("../utils/contracts");
+const {parseAddress} = require("../utils/accounts");
 
 
 async function selectContract(hre) {
@@ -55,7 +56,6 @@ function inputDeploymentName(contractName) {
 cantripsScope.task("generate-deployment", "Generates a deployment file for an existing contract")
     .addOptionalParam("reference", "Generates an m.contractAt future to the specified address instead of an m.contract future")
     .addOptionalParam("chainId", "Whether to create this deployment chain-specific")
-    .addOptionalParam("address")
     .setAction(async ({ reference, chainId }, hre, runSuper) => {
         try {
             const ignitionPath = path.resolve(hre.config.paths.root, "ignition", "modules");
@@ -65,11 +65,14 @@ cantripsScope.task("generate-deployment", "Generates a deployment file for an ex
 
             const sourceTemplate = reference ? "ignition/ContractReference.js.template" :
                 "ignition/ContractCreation.js.template";
-            const targetPath = path.resolve(ignitionPath, `${deploymentName}.js`);
+            const parsedChainId = (chainId || 0) && parseChainId(chainId);
+            const targetPath = path.resolve(
+                ignitionPath, parsedChainId ? `${deploymentName}-${parsedChainId}.js` : `${deploymentName}.js`
+            );
             const replacements = {
                 MODULE_NAME: deploymentName,
                 CONTRACT_NAME: contractName,
-                CONTRACT_ADDRESS: validateAddress(reference)
+                CONTRACT_ADDRESS: reference && parseAddress(reference, hre)
             }
             applyTemplate(sourceTemplate, replacements, targetPath);
             console.log(`Deployment ${targetPath} successfully created.`);
