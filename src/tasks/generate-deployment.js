@@ -53,17 +53,23 @@ function inputDeploymentName(contractName) {
 
 
 cantripsScope.task("generate-deployment", "Generates a deployment file for an existing contract")
-    .setAction(async ({}, hre, runSuper) => {
+    .addOptionalParam("reference", "Generates an m.contractAt future to the specified address instead of an m.contract future")
+    .addOptionalParam("chainId", "Whether to create this deployment chain-specific")
+    .addOptionalParam("address")
+    .setAction(async ({ reference, chainId }, hre, runSuper) => {
         try {
             const ignitionPath = path.resolve(hre.config.paths.root, "ignition", "modules");
             await hre.run("compile");
             const contractName = await selectContract(hre);
             const deploymentName = await inputDeploymentName(contractName);
-            const sourceTemplate = `ignition/Simple.js.template`;
+
+            const sourceTemplate = reference ? "ignition/ContractReference.js.template" :
+                "ignition/ContractCreation.js.template";
             const targetPath = path.resolve(ignitionPath, `${deploymentName}.js`);
             const replacements = {
                 MODULE_NAME: deploymentName,
-                CONTRACT_NAME: contractName
+                CONTRACT_NAME: contractName,
+                CONTRACT_ADDRESS: validateAddress(reference)
             }
             applyTemplate(sourceTemplate, replacements, targetPath);
             console.log(`Deployment ${targetPath} successfully created.`);

@@ -26,7 +26,7 @@ async function parseAccount(account, hre) {
  * @param hre The hardhat runtime environment.
  * @returns {Promise<*>} The resulting address (obtained or validated; async function).
  */
-async function parseAddress(account, hre) {
+async function parseSmartAddress(account, hre) {
     const accounts = await hre.ethers.getSigners();
     account = (account || "").trim();
 
@@ -48,6 +48,25 @@ async function parseAddress(account, hre) {
 }
 
 
+/**
+ * Parses an address and returns it as a checksum one.
+ * @param address The address to validate and parse.
+ * @param hre The hardhat runtime environment.
+ * @returns {*|string}
+ */
+function parseAddress(address, hre) {
+    if (/^0x[a-fA-F0-9]$/.test(address)) {
+        try {
+            return hre.ethers.getAddress(address);
+        } catch(e) {
+            throw new Error("The chosen checksum address is not valid.");
+        }
+    } else {
+        throw new Error("The chosen address is not valid. Specify a valid lowercase or checksum address.")
+    }
+}
+
+
 module.exports = {
-    parseAddress, parseAccount
+    parseSmartAddress, parseAccount, parseAddress
 }
