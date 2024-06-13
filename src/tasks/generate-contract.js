@@ -30,7 +30,7 @@ function getGreatestSolidityVersion(hre, compilerVersions) {
 }
 
 
-async function selectSolidityVersion(hre) {
+async function selectSolidityVersion(hre, solidityVersion) {
     let compilerVersions = [];
     try {
         compilerVersions = hre.config.solidity.compilers.map((entry) => {
@@ -46,6 +46,14 @@ async function selectSolidityVersion(hre) {
         );
     }
 
+    const newest = await getGreatestSolidityVersion(hre, compilerVersions);
+
+    if (solidityVersion === "newest") {
+        return newest;
+    } else if (compilerVersions.indexOf(solidityVersion) >= 0) {
+        return solidityVersion;
+    }
+
     let selectConfig = {
         name: "contractType",
         message: "Select one of the installed Solidity versions:",
@@ -54,7 +62,7 @@ async function selectSolidityVersion(hre) {
         })
     };
     try {
-        selectConfig.initial = await getGreatestSolidityVersion(hre, compilerVersions);
+        selectConfig.initial = newest;
     } catch(e) {}
 
     let prompt = new enquirer.Select(selectConfig);
@@ -88,7 +96,6 @@ const PATHS = {
 
 
 async function selectContractType(contractType) {
-    contractType = (contractType || "").trim();
     if (contractType && !OPTIONS.find((e) => e.name === contractType))
     {
         console.error(`You've chosen a contract type not (yet) supported: ${contractType}.`);
@@ -116,18 +123,24 @@ function inputContractName(contractType) {
 
 
 cantripsScope.task("generate-contract", "Generates a contract file from a supported contract type")
-    .setAction(async ({}, hre, runSuper) => {
+    .addOptionalParam("contractType", "An optional, non-interactive, contract type")
+    .addOptionalParam("contractName", "An optional contract name")
+    .addOptionalParam("solidityVersion", "The solidity version to use (or 'newest' to pick the newest one from the config)")
+    .setAction(async ({ contractType, solidityVersion, contractName }, hre, runSuper) => {
         try {
+            contractType = (contractType || "").trim();
+            contractName = (contractName || "").trim();
+            solidityVersion = (solidityVersion || "").trim();
             const contractsPath = hre.config.paths.sources;
-            const contractType = await selectContractType();
-            const contractName = await inputContractName(contractType);
-            const solidityVersion = await selectSolidityVersion(hre);
-            const contractPath = PATHS[contractType];
+            const contractType_ = await selectContractType(contractType);
+            const contractName_ = contractName || await inputContractName(contractType_);
+            const solidityVersion_ = await selectSolidityVersion(hre, solidityVersion);
+            const contractPath = PATHS[contractType_];
             const sourceTemplate = `${contractPath}.sol.template`;
-            const targetPath = path.resolve(contractsPath, `${contractName}.sol`);
+            const targetPath = path.resolve(contractsPath, `${contractName_}.sol`);
             const replacements = {
-                SOLIDITY_VERSION: solidityVersion,
-                CONTRACT_NAME: contractName
+                SOLIDITY_VERSION: solidityVersion_,
+                CONTRACT_NAME: contractName_
             }
             applyTemplate(sourceTemplate, replacements, targetPath);
             console.log(`Contract ${targetPath} successfully created.`)
