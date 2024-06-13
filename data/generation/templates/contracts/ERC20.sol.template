@@ -12,11 +12,11 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
  * Your contract should define a way to mint tokens,
  * and optionally a way to burn tokens.
  */
-contract #CONTRACT_NAME# is ERC20, Ownable {
+contract #CONTRACT_NAME# is ERC20 {
     /**
      * Feel free to setup your ERC20 name and symbol as you please.
      */
-    constructor() ERC20("My Token", "MYTK") Ownable(msg.sender) {}
+    constructor() ERC20("My Token", "MYTK") {}
 
     /**
      * Feel free to either uncomment+modify or remove this method.
