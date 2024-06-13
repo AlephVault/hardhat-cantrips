@@ -1,7 +1,7 @@
 const {applyTemplate} = require("../utils/templates");
 const enquirer = require("enquirer");
 const path = require("path");
-const {cantripsScope} = require("./common");
+const {cantripsScope, checkNotInteractive} = require("./common");
 const {inputUntil} = require("../utils/input");
 
 
@@ -30,7 +30,7 @@ function getGreatestSolidityVersion(hre, compilerVersions) {
 }
 
 
-async function selectSolidityVersion(hre, solidityVersion) {
+async function selectSolidityVersion(solidityVersion, forceNonInteractive, hre) {
     let compilerVersions = [];
     try {
         compilerVersions = hre.config.solidity.compilers.map((entry) => {
@@ -65,6 +65,7 @@ async function selectSolidityVersion(hre, solidityVersion) {
         selectConfig.initial = newest;
     } catch(e) {}
 
+    checkNotInteractive(forceNonInteractive);
     let prompt = new enquirer.Select(selectConfig);
     return await prompt.run();
 }
@@ -95,7 +96,7 @@ const PATHS = {
 }
 
 
-async function selectContractType(contractType) {
+async function selectContractType(contractType, forceNonInteractive) {
     if (contractType && !OPTIONS.find((e) => e.name === contractType))
     {
         console.error(`You've chosen a contract type not (yet) supported: ${contractType}.`);
@@ -103,6 +104,7 @@ async function selectContractType(contractType) {
     }
 
     if (!contractType) {
+        checkNotInteractive(forceNonInteractive);
         let prompt = new enquirer.Select({
             name: "contractType",
             message: "Select a contract type:",
@@ -120,7 +122,8 @@ function validateContractName(contractName) {
 }
 
 
-function inputContractName(contractType) {
+function inputContractName(contractType, forceNonInteractive) {
+    checkNotInteractive(forceNonInteractive);
     return inputUntil("My" + contractType, "Give a name to your contract:", (contractName) => {
         return /^[A-Za-z][A-Za-z0-9]*$/.test(contractName);
     }, "Invalid contract name.");
@@ -131,15 +134,16 @@ cantripsScope.task("generate-contract", "Generates a contract file from a suppor
     .addOptionalParam("contractType", "An optional, non-interactive, contract type")
     .addOptionalParam("contractName", "An optional contract name")
     .addOptionalParam("solidityVersion", "The solidity version to use (or 'newest' to pick the newest one from the config)")
-    .setAction(async ({ contractType, solidityVersion, contractName }, hre, runSuper) => {
+    .addFlag("forceNonInteractive", "Raise an error if one or more params were not specified and the action would become interactive")
+    .setAction(async ({ contractType, solidityVersion, contractName, forceNonInteractive }, hre, runSuper) => {
         try {
             contractType = (contractType || "").trim();
             contractName = (contractName || "").trim();
             solidityVersion = (solidityVersion || "").trim();
             const contractsPath = hre.config.paths.sources;
-            const contractType_ = await selectContractType(contractType);
-            const contractName_ = validateContractName(contractName) || await inputContractName(contractType_);
-            const solidityVersion_ = await selectSolidityVersion(hre, solidityVersion);
+            const contractType_ = await selectContractType(contractType, forceNonInteractive);
+            const contractName_ = validateContractName(contractName) || await inputContractName(contractType_, forceNonInteractive);
+            const solidityVersion_ = await selectSolidityVersion(solidityVersion, forceNonInteractive, hre);
             const contractPath = PATHS[contractType_];
             const sourceTemplate = `${contractPath}.sol.template`;
             const targetPath = path.resolve(contractsPath, `${contractName_}.sol`);

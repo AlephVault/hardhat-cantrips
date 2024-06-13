@@ -79,6 +79,12 @@ function normalizeByProjectPrefix(file, hre) {
 }
 
 
+function checkNotInteractive(forceNonInteractive) {
+    if (forceNonInteractive) throw new Error("Aborting: The current action became interactive");
+}
+
+
 module.exports = {
-    traverseDirectory, getProjectPrefix, removeProjectPrefix, normalizeByProjectPrefix
+    traverseDirectory, getProjectPrefix, removeProjectPrefix, normalizeByProjectPrefix,
+    checkNotInteractive
 }
