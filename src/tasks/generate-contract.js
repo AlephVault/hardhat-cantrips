@@ -115,9 +115,14 @@ async function selectContractType(contractType) {
 }
 
 
+function validateContractName(contractName) {
+    return /^[A-Za-z][A-Za-z0-9]*$/.test(contractName) ? contractName : ""
+}
+
+
 function inputContractName(contractType) {
     return inputUntil(contractType, "Give a name to your contract:", (contractName) => {
-        return /[A-Za-z][A-Za-z0-9]*/.test(contractName);
+        return /^[A-Za-z][A-Za-z0-9]*$/.test(contractName);
     }, "Invalid contract name.");
 }
 
@@ -133,7 +138,7 @@ cantripsScope.task("generate-contract", "Generates a contract file from a suppor
             solidityVersion = (solidityVersion || "").trim();
             const contractsPath = hre.config.paths.sources;
             const contractType_ = await selectContractType(contractType);
-            const contractName_ = contractName || await inputContractName(contractType_);
+            const contractName_ = validateContractName(contractName) || await inputContractName(contractType_);
             const solidityVersion_ = await selectSolidityVersion(hre, solidityVersion);
             const contractPath = PATHS[contractType_];
             const sourceTemplate = `${contractPath}.sol.template`;
