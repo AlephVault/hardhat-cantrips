@@ -7,9 +7,10 @@ const {cantripsScope} = require("./common");
 const {inputUntil} = require("../utils/input");
 const {collectContractNames} = require("../utils/contracts");
 const {parseAddress} = require("../utils/accounts");
+const {checkNotInteractive} = require("../utils/common");
 
 
-async function selectContract(hre, contractName) {
+async function selectContract(contractName, forceNonInteractive, hre) {
     const contractNames = collectContractNames(hre);
     if (contractNames.find(({name}) => name === contractName)) {
         return contractName;
@@ -40,6 +41,7 @@ async function selectContract(hre, contractName) {
         return {name: name, message: `${name} (artifact: artifacts/contracts/${path})`};
     });
 
+    checkNotInteractive(forceNonInteractive);
     let prompt = new enquirer.Select({
         name: "contractType",
         message: "Select a contract to deploy:",
@@ -54,7 +56,8 @@ function validateContractName(contractName) {
 }
 
 
-function inputDeploymentName(contractName) {
+function inputDeploymentName(contractName, forceNonInteractive) {
+    checkNotInteractive(forceNonInteractive);
     return inputUntil(contractName, "Give a name to your deployment", (deploymentName) => {
         return /^[A-Za-z][A-Za-z0-9]*$/.test(deploymentName);
     }, "Invalid deployment name.");
@@ -66,14 +69,15 @@ cantripsScope.task("generate-deployment", "Generates a deployment file for an ex
     .addOptionalParam("moduleName", "An optional ignition module name")
     .addOptionalParam("reference", "Generates an m.contractAt future to the specified address instead of an m.contract future")
     .addOptionalParam("chainId", "Whether to create this deployment chain-specific")
-    .setAction(async ({ contractName, reference, chainId, moduleName }, hre, runSuper) => {
+    .addFlag("forceNonInteractive", "Raise an error if one or more params were not specified and the action would become interactive")
+    .setAction(async ({ contractName, reference, chainId, moduleName, forceNonInteractive }, hre, runSuper) => {
         try {
             contractName = (contractName || "").trim();
             moduleName = (moduleName || "").trim();
             const ignitionPath = path.resolve(hre.config.paths.root, "ignition", "modules");
             await hre.run("compile");
-            const contractName_ = await selectContract(hre, contractName);
-            const moduleName_ = validateContractName(moduleName) || await inputDeploymentName(contractName_);
+            const contractName_ = await selectContract(contractName, forceNonInteractive, hre);
+            const moduleName_ = validateContractName(moduleName) || await inputDeploymentName(contractName_, forceNonInteractive);
 
             const sourceTemplate = reference ? "ignition/ContractReference.js.template" :
                 "ignition/ContractCreation.js.template";
