@@ -121,7 +121,7 @@ function validateContractName(contractName) {
 
 
 function inputContractName(contractType) {
-    return inputUntil(contractType, "Give a name to your contract:", (contractName) => {
+    return inputUntil("My" + contractType, "Give a name to your contract:", (contractName) => {
         return /^[A-Za-z][A-Za-z0-9]*$/.test(contractName);
     }, "Invalid contract name.");
 }
