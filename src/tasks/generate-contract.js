@@ -1,7 +1,8 @@
 const {applyTemplate} = require("../utils/templates");
 const enquirer = require("enquirer");
 const path = require("path");
-const {cantripsScope, checkNotInteractive} = require("./common");
+const {cantripsScope} = require("./common");
+const {checkNotInteractive} = require("../utils/common");
 const {inputUntil} = require("../utils/input");
 
 
