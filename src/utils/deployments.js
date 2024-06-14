@@ -66,16 +66,16 @@ function saveDeployEverythingSettings(settings, hre) {
  * Adds a module to the deploy-everything settings (loads it before and saves
  * it after).
  * @param file The module file being added.
- * @param imported Whether it is externally imported or not.
+ * @param external Whether it is externally imported or not.
  * @param hre The hardhat runtime environment.
  */
-function addDeployEverythingModule(file, imported, hre) {
+function addDeployEverythingModule(file, external, hre) {
     // Normalize the file to add.
     const normalized = normalizeByProjectPrefix(file, hre);
 
     // Load the settings, add it, and save the settings.
     let settings = loadDeployEverythingSettings(hre);
-    settings.contents = [...(settings.contents || []), {filename: normalized, imported}];
+    settings.contents = [...(settings.contents || []), {filename: normalized, external}];
     saveDeployEverythingSettings(settings, hre);
 }
 
@@ -83,14 +83,14 @@ function addDeployEverythingModule(file, imported, hre) {
 /**
  * Removes a module to the deploy-everything settings.
  * @param file The module file being removed.
- * @param imported Whether the entry to remove is externally imported or not.
+ * @param external Whether the entry to remove is externally imported or not.
  * @param hre The hardhat runtime environment.
  */
-function removeDeployEverythingModule(file, imported, hre) {
+function removeDeployEverythingModule(file, external, hre) {
     const normalized = normalizeByProjectPrefix(file, hre);
     let settings = loadDeployEverythingSettings(hre);
     settings.contents = (settings.contents || []).filter((element) => {
-        return !!element.imported !== !!imported || normalized !== element.filename;
+        return !!element.external !== !!external || normalized !== element.filename;
     });
     saveDeployEverythingSettings(settings, hre);
 }
@@ -100,14 +100,14 @@ function removeDeployEverythingModule(file, imported, hre) {
  * Tells whether a file is already added as a module in the deploy-everything
  * (current) settings.
  * @param file The module file being tested.
- * @param imported Whether we're talking about an imported file or a local one.
+ * @param external Whether we're talking about an imported file or a local one.
  * @param hre The hardhat runtime environment.
  * @returns {boolean} Whether it is already added or not.
  */
-function isModuleInDeployEverything(file, imported, hre) {
+function isModuleInDeployEverything(file, external, hre) {
     const normalized = normalizeByProjectPrefix(file, hre);
     let settings = loadDeployEverythingSettings(hre);
     return !!(settings.contents || []).find((element) => {
-        return !!element.imported === !!imported || normalized === element.filename;
+        return !!element.external === !!external || normalized === element.filename;
     });
 }
