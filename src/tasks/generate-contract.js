@@ -5,31 +5,16 @@ const {cantripsScope, checkNotInteractive} = require("./common");
 const {inputUntil} = require("../utils/input");
 
 
-cantripsScope.task("show-config")
-    .setAction(({}, hre, runSuper) => {
-        console.log("Config: ", hre.config);
-        console.log("Solidity: ", hre.config.solidity.compilers);
-    });
-
-
-function getGreatestSolidityVersion(hre, compilerVersions) {
-    if (compilerVersions.length === 0) throw new Error(
-        "The current Hardhat configuration has no valid compiler entries. " +
-        "Define at least one Solidity compiler entry (with proper version format)."
-    );
-
-    return compilerVersions.reduce((v1, v2) => {
-        const v1parts = v1.split(".");
-        const v2parts = v2.split(".");
-
-        if (parseInt(v1parts[0]) > parseInt(v2parts[0])) return v1;
-        if (parseInt(v1parts[1]) > parseInt(v2parts[1])) return v1;
-        if (parseInt(v1parts[2]) > parseInt(v2parts[2])) return v1;
-        return v2;
-    });
-}
-
-
+/**
+ * Selects a solidity version (or keeps the provided one if it is valid).
+ * @param solidityVersion The initial (and perhaps to keep) solidity version.
+ * If not valid, this command tries to become interactive and pick one of the
+ * available solidity versions.
+ * @param forceNonInteractive If true, raises an error when the command tries
+ * to become interactive.
+ * @param hre The hardhat runtime environment.
+ * @returns {Promise<*|string>} The chosen solidity version (async function).
+ */
 async function selectSolidityVersion(solidityVersion, forceNonInteractive, hre) {
     let compilerVersions = [];
     try {
@@ -46,7 +31,20 @@ async function selectSolidityVersion(solidityVersion, forceNonInteractive, hre) 
         );
     }
 
-    const newest = await getGreatestSolidityVersion(hre, compilerVersions);
+    if (compilerVersions.length === 0) throw new Error(
+        "The current Hardhat configuration has no valid compiler entries. " +
+        "Define at least one Solidity compiler entry (with proper version format)."
+    );
+
+    const newest = compilerVersions.reduce((v1, v2) => {
+        const v1parts = v1.split(".");
+        const v2parts = v2.split(".");
+
+        if (parseInt(v1parts[0]) > parseInt(v2parts[0])) return v1;
+        if (parseInt(v1parts[1]) > parseInt(v2parts[1])) return v1;
+        if (parseInt(v1parts[2]) > parseInt(v2parts[2])) return v1;
+        return v2;
+    });
 
     if (solidityVersion === "newest") {
         return newest;
@@ -55,7 +53,7 @@ async function selectSolidityVersion(solidityVersion, forceNonInteractive, hre) 
     }
 
     let selectConfig = {
-        name: "contractType",
+        name: "solidityVersion",
         message: "Select one of the installed Solidity versions:",
         choices: compilerVersions.map((version) => {
             return {name: version, message: version}
@@ -96,6 +94,15 @@ const PATHS = {
 }
 
 
+/**
+ * Selects a type of contract to generate (or keeps the provided one if it is valid).
+ * @param contractType The initial (and perhaps to keep) contract type. If not valid,
+ * this command tries to become interactive and pick one of the available contract
+ * types.
+ * @param forceNonInteractive If true, raises an error when the command tries
+ * to become interactive.
+ * @returns {Promise<*|string>} The chosen contract type (async function).
+ */
 async function selectContractType(contractType, forceNonInteractive) {
     if (contractType && !OPTIONS.find((e) => e.name === contractType))
     {
@@ -117,15 +124,27 @@ async function selectContractType(contractType, forceNonInteractive) {
 }
 
 
+/**
+ * Validates the contract name to be a valid Solidity contract name.
+ * @param contractName
+ * @returns {*|string}
+ */
 function validateContractName(contractName) {
-    return /^[A-Za-z][A-Za-z0-9]*$/.test(contractName) ? contractName : ""
+    return /^[A-Za-z][A-Za-z0-9_]*$/.test(contractName) ? contractName : ""
 }
 
 
+/**
+ * Prompts the user to write a valid contract name.
+ * @param contractType The contract type.
+ * @param forceNonInteractive If true, raises an error since this command tries
+ * to become interactive.
+ * @returns {Promise<*|undefined>} The contract name (async function).
+ */
 function inputContractName(contractType, forceNonInteractive) {
     checkNotInteractive(forceNonInteractive);
     return inputUntil("My" + contractType, "Give a name to your contract:", (contractName) => {
-        return /^[A-Za-z][A-Za-z0-9]*$/.test(contractName);
+        return /^[A-Za-z][A-Za-z0-9_]*$/.test(contractName);
     }, "Invalid contract name.");
 }
 
