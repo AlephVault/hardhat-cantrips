@@ -10,6 +10,14 @@ const {parseAddress} = require("../utils/accounts");
 const {checkNotInteractive} = require("../utils/common");
 
 
+/**
+ * Selects a contract to generate its module (or keeps the provided one if it is valid).
+ * @param contractName The initial (and perhaps to keep) contract name. If not valid,
+ * this command tries to become interactive and pick one of the available contracts.
+ * @param forceNonInteractive If true, raises an error when the command tries
+ * to become interactive.
+ * @returns {Promise<*|string>} The chosen contract (async function).
+ */
 async function selectContract(contractName, forceNonInteractive, hre) {
     const contractNames = collectContractNames(hre);
     if (contractNames.find(({name}) => name === contractName)) {
@@ -51,11 +59,24 @@ async function selectContract(contractName, forceNonInteractive, hre) {
 }
 
 
-function validateContractName(contractName) {
-    return /^[A-Za-z][A-Za-z0-9]*$/.test(contractName) ? contractName : ""
+/**
+ * Validates the deployment name to be a valid Solidity contract name.
+ * @param deploymentName The contract name.
+ * @returns {*|string} Either the same contract name or, if not valid, "".
+ */
+
+function validateDeploymentName(deploymentName) {
+    return /^[A-Za-z][A-Za-z0-9]*$/.test(deploymentName) ? deploymentName : ""
 }
 
 
+/**
+ * Prompts the user to write a valid deployment name.
+ * @param contractName The contract name.
+ * @param forceNonInteractive If true, raises an error since this command tries
+ * to become interactive.
+ * @returns {Promise<*|undefined>} The contract name (async function).
+ */
 function inputDeploymentName(contractName, forceNonInteractive) {
     checkNotInteractive(forceNonInteractive);
     return inputUntil(contractName, "Give a name to your deployment", (deploymentName) => {
@@ -68,7 +89,7 @@ cantripsScope.task("generate-deployment", "Generates a deployment file for an ex
     .addOptionalParam("contractName", "An optional existing contract name")
     .addOptionalParam("moduleName", "An optional ignition module name")
     .addOptionalParam("reference", "Generates an m.contractAt future to the specified address instead of an m.contract future")
-    .addOptionalParam("chainId", "Whether to create this deployment chain-specific")
+    .addOptionalParam("chainId", "Create this deployment chain-specific for a given chain")
     .addFlag("forceNonInteractive", "Raise an error if one or more params were not specified and the action would become interactive")
     .setAction(async ({ contractName, reference, chainId, moduleName, forceNonInteractive }, hre, runSuper) => {
         try {
@@ -77,7 +98,7 @@ cantripsScope.task("generate-deployment", "Generates a deployment file for an ex
             const ignitionPath = path.resolve(hre.config.paths.root, "ignition", "modules");
             await hre.run("compile");
             const contractName_ = await selectContract(contractName, forceNonInteractive, hre);
-            const moduleName_ = validateContractName(moduleName) || await inputDeploymentName(contractName_, forceNonInteractive);
+            const moduleName_ = validateDeploymentName(moduleName) || await inputDeploymentName(contractName_, forceNonInteractive);
 
             const sourceTemplate = reference ? "ignition/ContractReference.js.template" :
                 "ignition/ContractCreation.js.template";

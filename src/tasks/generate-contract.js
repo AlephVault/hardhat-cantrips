@@ -127,8 +127,8 @@ async function selectContractType(contractType, forceNonInteractive) {
 
 /**
  * Validates the contract name to be a valid Solidity contract name.
- * @param contractName
- * @returns {*|string}
+ * @param contractName The contract name.
+ * @returns {*|string} Either the same contract name or, if not valid, "".
  */
 function validateContractName(contractName) {
     return /^[A-Za-z][A-Za-z0-9_]*$/.test(contractName) ? contractName : ""
