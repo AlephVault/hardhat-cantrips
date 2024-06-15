@@ -156,14 +156,16 @@ function listDeployEverythingModules(hre) {
  * @returns {boolean} Whether it is already added or not.
  */
 function isModuleInDeployEverything(file, external, hre) {
-    const normalized = normalizeByProjectPrefix(file, hre);
+    external = !!external;
+    let module = external ? file : normalizeByProjectPrefix(file, hre).file;
     let settings = loadDeployEverythingSettings(hre);
     return !!(settings.contents || []).find((element) => {
-        return !!element.external === !!external || normalized === element.filename;
+        return !!element.external === !!external || module === element.filename;
     });
 }
 
 
 module.exports = {
-    addDeployEverythingModule, removeDeployEverythingModule
+    addDeployEverythingModule, removeDeployEverythingModule, isModuleInDeployEverything,
+    listDeployEverythingModules
 }

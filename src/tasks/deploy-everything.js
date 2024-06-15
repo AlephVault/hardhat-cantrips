@@ -1,6 +1,7 @@
 const enquirer = require("enquirer");
 const {cantripsScope, inputUntil} = require("./common");
 const {checkNotInteractive} = require("../utils/common");
+const {addDeployEverythingModule, removeDeployEverythingModule, listDeployEverythingModules, isModuleInDeployEverything} = require("../utils/deployments");
 
 
 /**
@@ -15,13 +16,14 @@ const {checkNotInteractive} = require("../utils/common");
  */
 async function chooseAction(action, forceNonInteractive, hre) {
     action = (action || "").trim().toLowerCase();
-    const actions = ["add", "remove", "list", "run"];
     const choices = [
-        {name: "add", message: "Adds a new deployment module (prompted or via --module)"},
-        {name: "remove", message: "Removes a deployment module (prompted or via --module)"},
-        {name: "list", message: "Lists all the deployment modules (sequentially)"},
-        {name: "run", message: "Executes all the deployment modules (to the end)"}
+        {name: "add", message: "Add a new deployment module (prompted or via --module)"},
+        {name: "remove", message: "Remove a deployment module (prompted or via --module)"},
+        {name: "list", message: "List all the deployment modules (sequentially)"},
+        {name: "run", message: "Execute all the deployment modules ('till the end)"},
+        {name: "check", message: "Check whether a module is added"}
     ];
+    const actions = choices.map((c) => c.name);
     if (actions.indexOf(action) >= 0) {
         return action;
     }
@@ -56,7 +58,9 @@ async function chooseAction(action, forceNonInteractive, hre) {
  * @returns {Promise<void>} Nothing (async function).
  */
 async function add(module, external, forceNonInteractive, hre) {
-
+    // TODO prompt module if not set.
+    addDeployEverythingModule(module, external, hre);
+    console.log("The module was successfully added to the full deployment.");
 }
 
 
@@ -73,7 +77,9 @@ async function add(module, external, forceNonInteractive, hre) {
  * @returns {Promise<void>} Nothing (async function).
  */
 async function remove(module, external, forceNonInteractive, hre) {
-
+    // TODO prompt module if not set.
+    removeDeployEverythingModule(module, external, hre);
+    console.log("The module was successfully removed to the full deployment.");
 }
 
 
@@ -83,7 +89,37 @@ async function remove(module, external, forceNonInteractive, hre) {
  * @returns {Promise<void>} Nothing (async function).
  */
 async function list(hre) {
+    const contents = listDeployEverythingModules(hre);
+    if (!contents.length) {
+        console.log("There are no modules added to the full deployment.");
+    } else {
+        console.log("These modules are added to the full deployment:");
+    }
+    contents.forEach((e) => {
+        const prefix = e.external ? "External file" : "Project file";
+        console.log(`- ${prefix}: ${e.filename}`);
+    })
+}
 
+
+/**
+ * Checks whether a module is added to the full deployment.
+ * @param module The path to the module. If not given, this action tries
+ * to become interactive and list all the added modules (only those that
+ * are local or external, depending on whether the external argument is
+ * false or true, respectively).
+ * @param external Whether it is external or local to the project.
+ * @param forceNonInteractive If true, raises an error when the command tries
+ * to become interactive.
+ * @param hre The hardhat runtime environment.
+ */
+function check(module, external, forceNonInteractive, hre) {
+    // TODO prompt module if not set.
+    if (isModuleInDeployEverything(module, external, hre)) {
+        console.log("The module is added to the full deployment.");
+    } else {
+        console.log("The module is not added to the full deployment.");
+    }
 }
 
 
@@ -93,11 +129,12 @@ async function list(hre) {
  * @returns {Promise<void>} Nothing (async function).
  */
 async function run(hre) {
-
+    // TODO implement this.
+    console.error("Running is not yet implemented.");
 }
 
 
-cantripsScope.task("deploy-everything", "Manages or executes the 'full deployment' in a chain")
+cantripsScope.task("deploy-everything", "Manages or executes the full deployment in a chain")
     .addOptionalPositionalParam("action", "The action to execute: add, remove, list or run")
     .addFlag("forceNonInteractive", "Raise an error if one or more params were not specified and the action would become interactive")
     .addFlag("external", "Tells, for add/remove, that the module comes from an external package")
@@ -115,6 +152,9 @@ cantripsScope.task("deploy-everything", "Manages or executes the 'full deploymen
                     break;
                 case "list":
                     await list(hre);
+                    break;
+                case "check":
+                    check(module, external, forceNonInteractive, hre);
                     break;
                 case "run":
                     await run(hre);
