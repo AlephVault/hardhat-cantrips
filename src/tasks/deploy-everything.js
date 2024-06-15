@@ -167,22 +167,34 @@ function loadParameters(file) {
 
 /**
  * Runs all the registered modules in the deployment.
- * @param parametersFile Optionally loads the parameters.
+ * @param parametersFile Optionally loads the parameters (same semantics of ignition's deploy command).
+ * @param strategyName The ignition deployment strategy to use (same semantics of ignition's deploy command).
+ * @param deploymentId An optional id for the deployment (same semantics of ignition's deploy command).
+ * @param defaultSender The default sender (same semantics of ignition's deploy command).
+ * @param reset Whether to reset the deployment state (journal) or not (same semantics of ignition's deploy command).
  * @param hre The hardhat runtime environment.
  * @returns {Promise<void>} Nothing (async function).
  */
-async function run(parametersFile, hre) {
-    await runDeployEverythingModules(loadParameters(parametersFile), hre, {});
+async function run(parametersFile, strategyName, deploymentId, defaultSender, reset, hre) {
+    const strategyConfig = hre.config.ignition?.strategyConfig?.[strategyName];
+    await runDeployEverythingModules(reset,{
+        config: {}, strategyConfig, strategy: strategyName, deploymentId, defaultSender,
+        parameters: loadParameters(parametersFile)
+    }, hre);
 }
 
 
 cantripsScope.task("deploy-everything", "Manages or executes the full deployment in a chain")
-    .addOptionalPositionalParam("action", "The action to execute: add, remove, list or run")
+    .addOptionalPositionalParam("action", "The action to execute: add, remove, list, check or run")
     .addFlag("forceNonInteractive", "Raise an error if one or more params were not specified and the action would become interactive")
     .addFlag("external", "Tells, for add/remove, that the module comes from an external package")
     .addOptionalParam("module", "Tells the module to add/remove")
-    .addOptionalParam("parametersFile", "An optional ignition parameters file to use")
-    .setAction(async ({action, forceNonInteractive, external, module, parametersFile}, hre, runSuper) => {
+    .addOptionalParam("parameters", "For the 'run' action: A relative path to a JSON file to use for the module parameters")
+    .addOptionalParam("deploymentId", "For the 'run' action: Set the id of the deployment")
+    .addOptionalParam("defaultSender", "For the 'run' action: Set the default sender for the deployment")
+    .addOptionalParam("strategy", "For the 'run' action: Set the deployment strategy to use", "basic")
+    .addFlag("reset", "For the 'run' action: Wipes the existing deployment state before deploying")
+    .setAction(async ({action, forceNonInteractive, external, module, parameters: parametersFile, defaultSender, strategy, deploymentId, reset}, hre, runSuper) => {
         try {
             parametersFile = (parametersFile || "").trim();
             action = await chooseAction(action, forceNonInteractive, hre);
@@ -201,7 +213,7 @@ cantripsScope.task("deploy-everything", "Manages or executes the full deployment
                     check(module, external, forceNonInteractive, hre);
                     break;
                 case "run":
-                    await run(parametersFile, hre);
+                    await run(parametersFile, strategy, deploymentId, defaultSender, reset, hre);
                     break;
                 default:
                     console.error("Invalid action: " + action);

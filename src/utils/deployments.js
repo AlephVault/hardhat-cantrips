@@ -204,17 +204,15 @@ function importModule(filename, external, chainId, hre) {
 
 /**
  * Runs all the deployments (also considering the current chainId).
- * @param parameters The parameters to use when running the deployments.
  * @param reset Resets the current deployment status (journal) for the current network.
- * @param deploymentArgs more deployment arguments (except parameters).
+ * @param deploymentArgs The deployment arguments (same semantics of `hre.ignition.deploy` args).
  * @param hre The hardhat runtime environment.
  * @returns {Promise<void>} Nothing (async function).
  */
-async function runDeployEverythingModules(parameters, hre, reset, deploymentArgs) {
-    deploymentArgs = {...(deploymentArgs || {}), parameters: parameters || {}};
+async function runDeployEverythingModules(reset, deploymentArgs, hre) {
     const modules = listDeployEverythingModules(hre);
     const length = modules.length;
-    if (reset) await resetDeployments(deploymentArgs.deploymentId, hre);
+    if (!!reset) await resetDeployments(deploymentArgs.deploymentId, hre);
     for(let idx = 0; idx < length; idx++) {
         await hre.ignition.deploy(importModule(), deploymentArgs);
     }
