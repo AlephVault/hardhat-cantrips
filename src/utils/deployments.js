@@ -26,6 +26,21 @@ function collectDeploymentContractIds(hre) {
 
 
 /**
+ * Resets the deployment directory.
+ * @param deploymentId The deployment id (if false-like, will fall back to chain-{chainId}).
+ * @param hre The hardhat runtime environment.
+ * @returns {Promise<void>} Nothing (async function).
+ */
+async function resetDeployments(deploymentId, hre) {
+    const chainId = (await hre.ethers.provider.getNetwork()).chainId;
+    const deploymentDir = path.resolve(
+        hre.config.paths.root, "ignition", 'deployments', deploymentId || `chain-${chainId}`
+    );
+    fs.rmdirSync(deploymentDir, { recursive: true });
+}
+
+
+/**
  * Loads the deploy-everything settings from the ignition/deploy-everything.json
  * file (this file must be maintained and committed).
  * @param hre The hardhat runtime environment.
@@ -190,16 +205,18 @@ function importModule(filename, external, chainId, hre) {
 /**
  * Runs all the deployments (also considering the current chainId).
  * @param parameters The parameters to use when running the deployments.
- * @param hre The hardhat runtime environment.
+ * @param reset Resets the current deployment status (journal) for the current network.
  * @param deploymentArgs more deployment arguments (except parameters).
+ * @param hre The hardhat runtime environment.
  * @returns {Promise<void>} Nothing (async function).
  */
-async function runDeployEverythingModules(parameters, hre, deploymentArgs) {
-    parameters ||= {};
+async function runDeployEverythingModules(parameters, hre, reset, deploymentArgs) {
+    deploymentArgs = {...(deploymentArgs || {}), parameters: parameters || {}};
     const modules = listDeployEverythingModules(hre);
     const length = modules.length;
+    if (reset) await resetDeployments(deploymentArgs.deploymentId, hre);
     for(let idx = 0; idx < length; idx++) {
-        await hre.ignition.deploy(importModule(), {...deploymentArgs, parameters});
+        await hre.ignition.deploy(importModule(), deploymentArgs);
     }
 }
 
