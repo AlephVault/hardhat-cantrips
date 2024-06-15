@@ -68,6 +68,7 @@ function saveDeployEverythingSettings(settings, hre) {
  * @param file The module file being added.
  * @param external Whether it is externally imported or not.
  * @param hre The hardhat runtime environment.
+ * @returns {boolean} Whether the element was added or it was already present.
  */
 function addDeployEverythingModule(file, external, hre) {
     // Normalize the file to add.
@@ -75,8 +76,13 @@ function addDeployEverythingModule(file, external, hre) {
 
     // Load the settings, add it, and save the settings.
     let settings = loadDeployEverythingSettings(hre);
-    settings.contents = [...(settings.contents || []), {filename: normalized, external}];
+    settings.contents ||= [];
+    if (!!settings.contents.find((e) => {
+        return e.filename === normalized && e.external === external;
+    })) return false;
+    settings.contents = [...settings.contents, {filename: normalized, external: !!external}];
     saveDeployEverythingSettings(settings, hre);
+    return true;
 }
 
 
@@ -85,14 +91,19 @@ function addDeployEverythingModule(file, external, hre) {
  * @param file The module file being removed.
  * @param external Whether the entry to remove is externally imported or not.
  * @param hre The hardhat runtime environment.
+ * @returns {boolean} Whether the element was removed or it was not present.
  */
 function removeDeployEverythingModule(file, external, hre) {
     const normalized = normalizeByProjectPrefix(file, hre);
     let settings = loadDeployEverythingSettings(hre);
-    settings.contents = (settings.contents || []).filter((element) => {
-        return !!element.external !== !!external || normalized !== element.filename;
+    settings.contents ||= [];
+    let element = settings.contents.find((e) => {
+        return e.filename === normalized && e.external === !!external;
     });
+    if (!element) return false;
+    settings.contents = settings.contents.filter((e) => e !== element);
     saveDeployEverythingSettings(settings, hre);
+    return true;
 }
 
 
@@ -110,4 +121,9 @@ function isModuleInDeployEverything(file, external, hre) {
     return !!(settings.contents || []).find((element) => {
         return !!element.external === !!external || normalized === element.filename;
     });
+}
+
+
+module.exports = {
+    isModuleInDeployEverything, addDeployEverythingModule, removeDeployEverythingModule
 }
