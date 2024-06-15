@@ -68,21 +68,50 @@ function saveDeployEverythingSettings(settings, hre) {
  * @param file The module file being added.
  * @param external Whether it is externally imported or not.
  * @param hre The hardhat runtime environment.
- * @returns {boolean} Whether the element was added or it was already present.
  */
 function addDeployEverythingModule(file, external, hre) {
-    // Normalize the file to add.
-    const normalized = normalizeByProjectPrefix(file, hre);
+    external = !!external;
+    let module = "";
+    if (external) {
+        // External files are taken as-is. They must not start with / and
+        // must succeed importing.
+        if (file.startsWith("/")) {
+            throw new Error(`The module starts with / (this is forbidden): ${file}.`);
+        }
+        // External files must succeed importing.
+        try {
+            require(file);
+        } catch(e) {
+            throw new Error(`Could not require() the external file: ${file}.`)
+        }
+        // Assign the module directly.
+        module = file;
+    }
+    else
+    {
+        // Internal files must belong to the project after normalization.
+        const normalized = normalizeByProjectPrefix(file, hre);
+        if (!normalized.stripped) {
+            throw new Error(`The module does not belong to the project: ${file}`);
+        }
+        // Internal files must succeed importing.
+        try {
+            require(file);
+        } catch(e) {
+            throw new Error(`Could not require() the project file: ${file}.`)
+        }
+        // Assign the module from the normalized path.
+        module = normalized.file;
+    }
 
-    // Load the settings, add it, and save the settings.
+    // Load, check absence, append, and save.
     let settings = loadDeployEverythingSettings(hre);
     settings.contents ||= [];
     if (!!settings.contents.find((e) => {
-        return e.filename === normalized && e.external === external;
-    })) return false;
-    settings.contents = [...settings.contents, {filename: normalized, external: !!external}];
+        return e.filename === module && e.external === external;
+    })) throw new Error(`The module is already added to the full deployment: ${file}.`);
+    settings.contents = [...settings.contents, {filename: module, external: external}];
     saveDeployEverythingSettings(settings, hre);
-    return true;
 }
 
 
@@ -91,19 +120,30 @@ function addDeployEverythingModule(file, external, hre) {
  * @param file The module file being removed.
  * @param external Whether the entry to remove is externally imported or not.
  * @param hre The hardhat runtime environment.
- * @returns {boolean} Whether the element was removed or it was not present.
  */
 function removeDeployEverythingModule(file, external, hre) {
-    const normalized = normalizeByProjectPrefix(file, hre);
+    external = !!external;
+    let module = external ? file : normalizeByProjectPrefix(file, hre).file;
+
+    // Load, check presence, remove, and save.
     let settings = loadDeployEverythingSettings(hre);
     settings.contents ||= [];
     let element = settings.contents.find((e) => {
-        return e.filename === normalized && e.external === !!external;
+        return e.filename === module && e.external === !!external;
     });
-    if (!element) return false;
+    if (!element) throw new Error(`The module is not added to the full deployment: ${file}.`);
     settings.contents = settings.contents.filter((e) => e !== element);
     saveDeployEverythingSettings(settings, hre);
-    return true;
+}
+
+
+/**
+ * Lists all the added modules.
+ * @param hre The hardhat runtime environment.
+ * @return {Array} The contents of the deployment.
+ */
+function listDeployEverythingModules(hre) {
+    return loadDeployEverythingSettings(hre).contents;
 }
 
 
@@ -125,5 +165,5 @@ function isModuleInDeployEverything(file, external, hre) {
 
 
 module.exports = {
-    isModuleInDeployEverything, addDeployEverythingModule, removeDeployEverythingModule
+    addDeployEverythingModule, removeDeployEverythingModule
 }
