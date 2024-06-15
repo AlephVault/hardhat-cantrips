@@ -148,6 +148,63 @@ function listDeployEverythingModules(hre) {
 
 
 /**
+ * Adds a chainId to the name of a JS or TS file.
+ * @param filename The file.
+ * @param chainId The chain id.
+ * @returns {string} The new file.
+ */
+function addChainId(filename, chainId) {
+    const parts = filename.split('.');
+    const extension = parts.pop();
+    return `${parts.join('.')}-${chainId}.${extension}`;
+}
+
+
+/**
+ * Imports a module (either externally or locally).
+ * @param filename The name of the file to load.
+ * @param external Whether it is external or not.
+ * @param chainId The chain id.
+ * @param hre The hardhat runtime environment.
+ * @returns {*} The loaded ignition module.
+ */
+function importModule(filename, external, chainId, hre) {
+    try {
+        return external
+            ? require(addChainId(filename, chainId))
+            : require(addChainId(path.resolve(hre.config.paths.root, filename), chainId));
+    } catch {
+        // Nothing here. Continue with the general load.
+    }
+
+    try {
+        return external
+            ? require(filename)
+            : require(path.resolve(hre.config.paths.root, filename));
+    } catch(e) {
+        throw new Error(`Could not import the ${external ? "external" : "in-project"} module: ${filename}.`);
+    }
+}
+
+
+/**
+ * Runs all the deployments (also considering the current chainId).
+ * @param parameters The parameters to use when running the deployments.
+ * @param hre The hardhat runtime environment.
+ * @param deploymentArgs more deployment arguments (except parameters).
+ * @returns {Promise<void>} Nothing (async function).
+ */
+async function runDeployEverythingModules(parameters, hre, deploymentArgs) {
+    parameters ||= {};
+    const modules = listDeployEverythingModules(hre);
+    const length = modules.length;
+    for(let idx = 0; idx < length; idx++) {
+        await hre.ignition.deploy(importModule(), {...deploymentArgs, parameters});
+    }
+}
+
+
+/**
  * Tells whether a file is already added as a module in the deploy-everything
  * (current) settings.
  * @param file The module file being tested.
@@ -167,5 +224,5 @@ function isModuleInDeployEverything(file, external, hre) {
 
 module.exports = {
     addDeployEverythingModule, removeDeployEverythingModule, isModuleInDeployEverything,
-    listDeployEverythingModules
+    listDeployEverythingModules, runDeployEverythingModules
 }

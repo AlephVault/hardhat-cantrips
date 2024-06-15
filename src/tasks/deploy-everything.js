@@ -1,7 +1,12 @@
 const enquirer = require("enquirer");
 const {cantripsScope, inputUntil} = require("./common");
 const {checkNotInteractive} = require("../utils/common");
-const {addDeployEverythingModule, removeDeployEverythingModule, listDeployEverythingModules, isModuleInDeployEverything} = require("../utils/deployments");
+const {
+    addDeployEverythingModule, removeDeployEverythingModule, listDeployEverythingModules, isModuleInDeployEverything,
+    runDeployEverythingModules
+} = require("../utils/deployments");
+const path = require("path");
+const fs = require("fs");
 
 
 /**
@@ -146,13 +151,28 @@ function check(module, external, forceNonInteractive, hre) {
 
 
 /**
+ * Loads the contents of a parameters file.
+ * @param file The file to load from.
+ * @returns {*} The parameters.
+ */
+function loadParameters(file) {
+    try {
+        const content = fs.readFileSync(file, {encoding: 'utf8'});
+        return JSON.parse(content);
+    } catch(e) {
+        return {};
+    }
+}
+
+
+/**
  * Runs all the registered modules in the deployment.
+ * @param parametersFile Optionally loads the parameters.
  * @param hre The hardhat runtime environment.
  * @returns {Promise<void>} Nothing (async function).
  */
-async function run(hre) {
-    // TODO implement this.
-    console.error("Running is not yet implemented.");
+async function run(parametersFile, hre) {
+    await runDeployEverythingModules(loadParameters(parametersFile), hre, {});
 }
 
 
@@ -161,8 +181,10 @@ cantripsScope.task("deploy-everything", "Manages or executes the full deployment
     .addFlag("forceNonInteractive", "Raise an error if one or more params were not specified and the action would become interactive")
     .addFlag("external", "Tells, for add/remove, that the module comes from an external package")
     .addOptionalParam("module", "Tells the module to add/remove")
-    .setAction(async ({action, forceNonInteractive, external, module}, hre, runSuper) => {
+    .addOptionalParam("parametersFile", "An optional ignition parameters file to use")
+    .setAction(async ({action, forceNonInteractive, external, module, parametersFile}, hre, runSuper) => {
         try {
+            parametersFile = (parametersFile || "").trim();
             action = await chooseAction(action, forceNonInteractive, hre);
             switch(action)
             {
@@ -179,7 +201,7 @@ cantripsScope.task("deploy-everything", "Manages or executes the full deployment
                     check(module, external, forceNonInteractive, hre);
                     break;
                 case "run":
-                    await run(hre);
+                    await run(parametersFile, hre);
                     break;
                 default:
                     console.error("Invalid action: " + action);
