@@ -12,7 +12,7 @@ const {addDeployEverythingModule, removeDeployEverythingModule, listDeployEveryt
  * @param forceNonInteractive If true, raises an error when the command tries
  * to become interactive.
  * @param hre The hardhat runtime environment.
- * @returns {Promise<*|string>} The chosen action (async function).
+ * @returns {Promise<string>} The chosen action (async function).
  */
 async function chooseAction(action, forceNonInteractive, hre) {
     action = (action || "").trim().toLowerCase();
@@ -43,6 +43,28 @@ async function chooseAction(action, forceNonInteractive, hre) {
 
 
 /**
+ * Asks for a module path from the user, interactively.
+ * @param external Tells this is an external module import.
+ * @param forceNonInteractive Tells that interactive commands
+ * are not allowed by raising an error.
+ * @returns {Promise<string>} The chosen action (async function).
+ */
+function getModule(external, forceNonInteractive) {
+    checkNotInteractive(forceNonInteractive);
+    console.log(external
+        ? "You must set a module. It must be a file belonging to an NPM/yarn-installed package."
+        : "You must set a module. It must be a path of an in-project file.");
+    const prompt = external
+        ? "Package-relative JavaScript file:"
+        : "Project-relative JavaScript file:";
+    return inputUntil("path/to/file.js", prompt, (m) => {
+        m = m.trim();
+        return m.endsWith(".js") || m.endsWith(".ts");
+    }, "The chosen file is not valid");
+}
+
+
+/**
  * Adds a module to the deployment.
  * @param module The path to the module. If not given, this action tries
  * to become interactive and:
@@ -58,7 +80,7 @@ async function chooseAction(action, forceNonInteractive, hre) {
  * @returns {Promise<void>} Nothing (async function).
  */
 async function add(module, external, forceNonInteractive, hre) {
-    // TODO prompt module if not set.
+    module = (module || "").trim() || getModule(external, forceNonInteractive);
     addDeployEverythingModule(module, external, hre);
     console.log("The module was successfully added to the full deployment.");
 }
@@ -77,7 +99,7 @@ async function add(module, external, forceNonInteractive, hre) {
  * @returns {Promise<void>} Nothing (async function).
  */
 async function remove(module, external, forceNonInteractive, hre) {
-    // TODO prompt module if not set.
+    module = (module || "").trim() || getModule(external, forceNonInteractive);
     removeDeployEverythingModule(module, external, hre);
     console.log("The module was successfully removed to the full deployment.");
 }
@@ -114,7 +136,7 @@ async function list(hre) {
  * @param hre The hardhat runtime environment.
  */
 function check(module, external, forceNonInteractive, hre) {
-    // TODO prompt module if not set.
+    module = (module || "").trim() || getModule(external, forceNonInteractive);
     if (isModuleInDeployEverything(module, external, hre)) {
         console.log("The module is added to the full deployment.");
     } else {

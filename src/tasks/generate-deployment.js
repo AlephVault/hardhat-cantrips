@@ -79,7 +79,7 @@ function validateDeploymentName(deploymentName) {
  */
 function inputDeploymentName(contractName, forceNonInteractive) {
     checkNotInteractive(forceNonInteractive);
-    return inputUntil(contractName, "Give a name to your deployment", (deploymentName) => {
+    return inputUntil(contractName, "Give a name to your deployment:", (deploymentName) => {
         return /^[A-Za-z][A-Za-z0-9]*$/.test(deploymentName);
     }, "Invalid deployment name.");
 }
