@@ -239,7 +239,7 @@ function isModuleInDeployEverything(file, external, hre) {
     let module = external ? file : normalizeByProjectPrefix(file, hre).file;
     let settings = loadDeployEverythingSettings(hre);
     return !!(settings.contents || []).find((element) => {
-        return !!element.external === !!external || module === element.filename;
+        return !!element.external === external && module === element.filename;
     });
 }
 
