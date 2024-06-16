@@ -36,7 +36,13 @@ async function resetDeployments(deploymentId, hre) {
     const deploymentDir = path.resolve(
         hre.config.paths.root, "ignition", 'deployments', deploymentId || `chain-${chainId}`
     );
-    fs.rmdirSync(deploymentDir, { recursive: true });
+    try {
+        fs.rmdirSync(deploymentDir, { recursive: true });
+    } catch {
+        try {
+            fs.rmSync(deploymentDir, { recursive: true });
+        } catch {}
+    }
 }
 
 
@@ -213,8 +219,9 @@ async function runDeployEverythingModules(reset, deploymentArgs, hre) {
     const modules = listDeployEverythingModules(hre);
     const length = modules.length;
     if (!!reset) await resetDeployments(deploymentArgs.deploymentId, hre);
+    const chainId = (await hre.ethers.provider.getNetwork()).chainId;
     for(let idx = 0; idx < length; idx++) {
-        await hre.ignition.deploy(importModule(), deploymentArgs);
+        await hre.ignition.deploy(importModule(modules[idx].filename, modules[idx].external, chainId, hre), deploymentArgs);
     }
 }
 
