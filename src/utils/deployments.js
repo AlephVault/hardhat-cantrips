@@ -111,7 +111,7 @@ function addDeployEverythingModule(file, external, hre) {
         }
         // Internal files must succeed importing.
         try {
-            require(file);
+            require(getProjectPrefix(hre) + "/" + normalized.file);
         } catch(e) {
             throw new Error(`Could not require() the project file: ${file}.`)
         }

@@ -1,5 +1,6 @@
 const enquirer = require("enquirer");
-const {cantripsScope, inputUntil} = require("./common");
+const {cantripsScope} = require("./common");
+const {inputUntil} = require("../utils/input");
 const {checkNotInteractive} = require("../utils/common");
 const {
     addDeployEverythingModule, removeDeployEverythingModule, listDeployEverythingModules, isModuleInDeployEverything,
@@ -54,7 +55,7 @@ async function chooseAction(action, forceNonInteractive, hre) {
  * are not allowed by raising an error.
  * @returns {Promise<string>} The chosen action (async function).
  */
-function getModule(external, forceNonInteractive) {
+async function getModule(external, forceNonInteractive) {
     checkNotInteractive(forceNonInteractive);
     console.log(external
         ? "You must set a module. It must be a file belonging to an NPM/yarn-installed package."
@@ -62,7 +63,7 @@ function getModule(external, forceNonInteractive) {
     const prompt = external
         ? "Package-relative JavaScript file:"
         : "Project-relative JavaScript file:";
-    return inputUntil("path/to/file.js", prompt, (m) => {
+    return await inputUntil("path/to/file.js", prompt, (m) => {
         m = m.trim();
         return m.endsWith(".js") || m.endsWith(".ts");
     }, "The chosen file is not valid");
@@ -85,7 +86,7 @@ function getModule(external, forceNonInteractive) {
  * @returns {Promise<void>} Nothing (async function).
  */
 async function add(module, external, forceNonInteractive, hre) {
-    module = (module || "").trim() || getModule(external, forceNonInteractive);
+    module = (module || "").trim() || await getModule(external, forceNonInteractive);
     addDeployEverythingModule(module, external, hre);
     console.log("The module was successfully added to the full deployment.");
 }
@@ -104,7 +105,7 @@ async function add(module, external, forceNonInteractive, hre) {
  * @returns {Promise<void>} Nothing (async function).
  */
 async function remove(module, external, forceNonInteractive, hre) {
-    module = (module || "").trim() || getModule(external, forceNonInteractive);
+    module = (module || "").trim() || await getModule(external, forceNonInteractive);
     removeDeployEverythingModule(module, external, hre);
     console.log("The module was successfully removed to the full deployment.");
 }
@@ -140,8 +141,8 @@ async function list(hre) {
  * to become interactive.
  * @param hre The hardhat runtime environment.
  */
-function check(module, external, forceNonInteractive, hre) {
-    module = (module || "").trim() || getModule(external, forceNonInteractive);
+async function check(module, external, forceNonInteractive, hre) {
+    module = (module || "").trim() || await getModule(external, forceNonInteractive);
     if (isModuleInDeployEverything(module, external, hre)) {
         console.log("The module is added to the full deployment.");
     } else {
@@ -221,7 +222,7 @@ cantripsScope.task("deploy-everything", "Manages or executes the full deployment
                     await list(hre);
                     break;
                 case "check":
-                    check(module, external, forceNonInteractive, hre);
+                    await check(module, external, forceNonInteractive, hre);
                     break;
                 case "run":
                     await run(parametersFile, strategy, deploymentId, defaultSender, reset, verify, hre);
