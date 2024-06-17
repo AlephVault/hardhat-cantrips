@@ -118,7 +118,7 @@ async function remove(module, external, forceNonInteractive, hre) {
  * @returns {Promise<void>} Nothing (async function).
  */
 async function list(hre) {
-    const contents = listDeployEverythingModules(hre);
+    const contents = await listDeployEverythingModules(hre);
     if (!contents.length) {
         console.log("There are no modules added to the full deployment.");
     } else {
@@ -127,6 +127,9 @@ async function list(hre) {
     contents.forEach((e) => {
         const prefix = e.external ? "External file" : "Project file";
         console.log(`- ${prefix}: ${e.filename}`);
+        if (e.moduleResults && e.moduleResults.length) {
+            console.log(`  Results: {${e.moduleResults.join(", ")}}`);
+        }
     })
 }
 

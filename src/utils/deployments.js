@@ -159,12 +159,20 @@ function removeDeployEverythingModule(file, external, hre) {
 
 
 /**
- * Lists all the added modules.
+ * Lists all the added modules and their results.
  * @param hre The hardhat runtime environment.
- * @return {Array} The contents of the deployment.
+ * @return {Promise<Array>} The added modules into the deployment (including the keys returned in the module) (async function).
  */
-function listDeployEverythingModules(hre) {
-    return loadDeployEverythingSettings(hre).contents;
+async function listDeployEverythingModules(hre) {
+    const chainId = (await hre.ethers.provider.getNetwork()).chainId;
+    return loadDeployEverythingSettings(hre).contents.map(({filename, external}) => {
+        let moduleResults = [];
+        try {
+            moduleResults = Object.keys(importModule(filename, external, chainId, hre).results || {});
+        } catch {}
+
+        return {filename, external, moduleResults};
+    });
 }
 
 
@@ -216,7 +224,7 @@ function importModule(filename, external, chainId, hre) {
  * @returns {Promise<void>} Nothing (async function).
  */
 async function runDeployEverythingModules(reset, deploymentArgs, hre) {
-    const modules = listDeployEverythingModules(hre);
+    const modules = await listDeployEverythingModules(hre);
     const length = modules.length;
     if (!!reset) await resetDeployments(deploymentArgs.deploymentId, hre);
     const chainId = (await hre.ethers.provider.getNetwork()).chainId;
