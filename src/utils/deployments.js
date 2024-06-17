@@ -4,28 +4,6 @@ const path = require("path");
 
 
 /**
- * Collects all the contract ids from the deployments in the current network.
- * @param hre The hardhat runtime environment.
- * @returns {*[]} The list of contract names.
- */
-function collectDeploymentContractIds(hre) {
-    let contractNames = [];
-
-    let stat = fs.statSync(path.resolve(hre.config.paths.artifacts, "contracts"));
-    if (stat.isDirectory()) {
-        traverseDirectory(path.resolve(hre.config.paths.artifacts, "contracts"), (subPath, filename) => {
-            if (filename.endsWith('.json') && !filename.endsWith('.dbg.json')) {
-                const contractName = path.basename(filename, '.json');
-                contractNames.push(contractName);
-            }
-        });
-    }
-
-    return contractNames;
-}
-
-
-/**
  * Resets the deployment directory.
  * @param deploymentId The deployment id (if false-like, will fall back to chain-{chainId}).
  * @param hre The hardhat runtime environment.
@@ -167,14 +145,12 @@ async function listDeployEverythingModules(hre) {
     const chainId = (await hre.ethers.provider.getNetwork()).chainId;
     return loadDeployEverythingSettings(hre).contents.map(({filename, external}) => {
         let moduleResults = [];
-        let id = null;
         try {
             const module = importModule(filename, external, chainId, hre);
-            moduleResults = Object.keys(module.results || {});
-            id = module.id;
+            moduleResults = Object.values(module.results || {}).map((f) => f.id);
         } catch {}
 
-        return {filename, external, moduleResults, id};
+        return {filename, external, moduleResults};
     });
 }
 
@@ -252,6 +228,73 @@ function isModuleInDeployEverything(file, external, hre) {
     return !!(settings.contents || []).find((element) => {
         return !!element.external === external && module === element.filename;
     });
+}
+
+
+/**
+ * Inspects the ignition addresses for a deployment id and retrieves
+   a contract instance from a given deployed contract (future) id.
+ * @param deploymentId The deployment id.
+ * @Param contractId The deployed contract (future) id.
+ * @param hre The hardhat runtime environment.
+ * @return {Promise<*>} A contract instance (async function).
+ */
+async function getDeployedContract(deploymentId, contractId, hre) {
+    // 1. Determine the actual deployment id.
+    const chainId = (await hre.ethers.provider.getNetwork()).chainId;
+    deploymentId || `chain-${chainId}`;
+
+    // 2. Determine the path and load the deployed addresses, if able.
+    let addresses = {};
+    try {
+        const fullPath = path.resolve(
+            hre.config.paths.root, "ignition", "deployments", deploymentId, "deployed_addresses.json"
+        );
+        addresses = JSON.parse(fs.readFileSync(fullPath, {encoding: 'utf8'}));
+    } catch(e) {}
+
+    // 3. From the deployed addresses, get the address we want.
+    const address = addresses[contractId];
+    if (!address) {
+        throw new Error(
+            `It seems that the contract ${contractId} is not deployed in the ` +
+            `deployment id ${deploymentId}. Ensure the deployment is actually ` +
+            "done for that contract."
+        )
+    }
+
+    // 4. Now, load the artifact and get its ABI:
+    let artifact = {};
+    try {
+        const artifactPath = path.resolve(
+            hre.config.paths.root, "ignition", "deployments", deploymentId, "artifacts", contractId + ".json"
+        );
+        artifact = JSON.parse(fs.readFileSync(artifactPath, {encoding: 'utf8'}));
+    } catch(e) {}
+    const abi = artifact.abi;
+    if (!abi || !abi.length) {
+        throw new Error(
+            `The contract data for the contract id ${contractId} in the deployment `
+            `id ${deploymentId} seems to be corrupted. Either you're in serious `
+            `troubles or this is your local network and you just need to redeploy `
+            `everything to make this work. Keep in touch with your team if this is `
+            `related to corrupted contract deployment data in a mainnet.`
+        );
+    }
+
+    // 5. Instantiate the contract by using the proper provider.
+    if (hre.viem) {
+        throw new Error(
+            "Getting a deployed contract is not yet supported by hardhat-viem."
+        );
+    } else if (hre.ethers) {
+        return await hre.ethers.getContractAt(abi, address);
+    } else {
+        throw new Error(
+            "For some reason, neither ethers.js nor viem are available in " +
+            "your project. The contract reference cannot be instantiated."
+        );
+    }
 }
 
 
