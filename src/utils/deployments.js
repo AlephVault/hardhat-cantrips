@@ -167,11 +167,14 @@ async function listDeployEverythingModules(hre) {
     const chainId = (await hre.ethers.provider.getNetwork()).chainId;
     return loadDeployEverythingSettings(hre).contents.map(({filename, external}) => {
         let moduleResults = [];
+        let id = null;
         try {
-            moduleResults = Object.keys(importModule(filename, external, chainId, hre).results || {});
+            const module = importModule(filename, external, chainId, hre);
+            moduleResults = Object.keys(module.results || {});
+            id = module.id;
         } catch {}
 
-        return {filename, external, moduleResults};
+        return {filename, external, moduleResults, id};
     });
 }
 

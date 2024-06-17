@@ -127,6 +127,7 @@ async function list(hre) {
     contents.forEach((e) => {
         const prefix = e.external ? "External file" : "Project file";
         console.log(`- ${prefix}: ${e.filename}`);
+        console.log(`  ID: ${e.id}`)
         if (e.moduleResults && e.moduleResults.length) {
             console.log(`  Results: {${e.moduleResults.join(", ")}}`);
         }
