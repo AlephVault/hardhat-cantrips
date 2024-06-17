@@ -8,6 +8,7 @@ const {
 } = require("../utils/deployments");
 const path = require("path");
 const fs = require("fs");
+const {extendEnvironment} = require("hardhat/config");
 
 
 /**
@@ -234,3 +235,10 @@ cantripsScope.task("deploy-everything", "Manages or executes the full deployment
             console.error(e);
         }
     });
+
+
+extendEnvironment((hre) => {
+    hre.ignition.deployEverything = (deploymentArgs, reset) => {
+        return runDeployEverythingModules(reset, deploymentArgs, hre);
+    }
+});
