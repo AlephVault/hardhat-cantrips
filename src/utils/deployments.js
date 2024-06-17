@@ -242,7 +242,7 @@ function isModuleInDeployEverything(file, external, hre) {
 async function getDeployedContract(deploymentId, contractId, hre) {
     // 1. Determine the actual deployment id.
     const chainId = (await hre.ethers.provider.getNetwork()).chainId;
-    deploymentId || `chain-${chainId}`;
+    deploymentId ||= `chain-${chainId}`;
 
     // 2. Determine the path and load the deployed addresses, if able.
     let addresses = {};
@@ -300,5 +300,5 @@ async function getDeployedContract(deploymentId, contractId, hre) {
 
 module.exports = {
     addDeployEverythingModule, removeDeployEverythingModule, isModuleInDeployEverything,
-    listDeployEverythingModules, runDeployEverythingModules
+    listDeployEverythingModules, runDeployEverythingModules, getDeployedContract
 }
