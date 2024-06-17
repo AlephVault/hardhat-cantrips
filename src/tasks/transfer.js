@@ -7,9 +7,9 @@ const {parseAmount} = require("../utils/amounts");
 
 
 cantripsScope.task("transfer", "Sends ETH from an account (by index) to another account (by index or address)")
-    .addParam("fromAccount", "The index (0 to number of accounts - 1) of the account to send ETH from")
-    .addParam("amount", "The amount to send, e.g. 1eth, 2.5eth or 3000000000000000000")
-    .addParam("toAccount", "The index (0 to number of accounts - 1), or address, of the account to send ETH to")
+    .addPositionalParam("fromAccount", "The index (0 to number of accounts - 1) of the account to send ETH from")
+    .addPositionalParam("amount", "The amount to send, e.g. 1eth, 2.5eth or 3000000000000000000")
+    .addPositionalParam("toAccount", "The index (0 to number of accounts - 1), or address, of the account to send ETH to")
     .setAction(async ({ fromAccount, amount, toAccount }, hre, runSuper) => {
         try {
             const fromAddress = await parseAccount(fromAccount, hre);
