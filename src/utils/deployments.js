@@ -283,18 +283,7 @@ async function getDeployedContract(deploymentId, contractId, hre) {
     }
 
     // 5. Instantiate the contract by using the proper provider.
-    if (hre.viem) {
-        throw new Error(
-            "Getting a deployed contract is not yet supported by hardhat-viem."
-        );
-    } else if (hre.ethers) {
-        return await hre.ethers.getContractAt(abi, address);
-    } else {
-        throw new Error(
-            "For some reason, neither ethers.js nor viem are available in " +
-            "your project. The contract reference cannot be instantiated."
-        );
-    }
+    return await hre.ethers.getContractAt(abi, address);
 }
 
 
