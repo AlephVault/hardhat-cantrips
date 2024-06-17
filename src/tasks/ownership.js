@@ -1,9 +1,5 @@
-const {applyTemplate} = require("../utils/templates");
-const enquirer = require("enquirer");
-const path = require("path");
 const {cantripsScope, inputUntil} = require("./common");
 const {parseSmartAddress, parseAccount} = require("../utils/accounts");
-const {parseAmount} = require("../utils/amounts");
 const {getDeployedContract} = require("../utils/deployments");
 
 
