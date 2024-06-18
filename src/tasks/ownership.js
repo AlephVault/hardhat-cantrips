@@ -1,21 +1,28 @@
-const {cantripsScope, inputUntil} = require("./common");
+const {cantripsScope} = require("./common");
+const {inputUntil} = require("../utils/input");
 const {parseSmartAddress, parseAccount} = require("../utils/accounts");
-const {getDeployedContract} = require("../utils/deployments");
+const {getDeployedContract, selectDeployedContract} = require("../utils/deployments");
 
 
 cantripsScope.task("transfer-ownership", "Transfers the ownership of a deployed contract to another account or address")
-    .addPositionalParam("contractId", "A contract id, specified as DeploymentModule#ContractId for the current network")
-    .addPositionalParam("toAccount", "The index (0 to number of accounts - 1), or address, of the account to send ETH to")
+    .addOptionalParam("toAddress", "The index (0 to number of accounts - 1), or address, of the account to send ETH to")
+    .addOptionalParam("contractId", "A contract id, specified as DeploymentModule#ContractId for the current network")
     .addOptionalParam("deploymentId", "The deployment id to get the contract from (it MUST match the current network)")
     .addOptionalParam("usingAccount", "The index (0 to number of accounts - 1) of the account to send ETH from")
-    .setAction(async ({ usingAccount, toAccount, contractId, deploymentId }, hre, runSuper) => {
+    .addFlag("forceNonInteractive", "Raise an error if one or more params were not specified and the action would become interactive")
+    .setAction(async ({usingAccount, toAddress, contractId, deploymentId, forceNonInteractive}, hre, runSuper) => {
         try {
             const usingAccount_ = await parseAccount(usingAccount || "0", hre);
-            const toAddress = await parseSmartAddress(toAccount, hre);
-            const contract = await getDeployedContract(deploymentId, contractId, hre);
+            const toAddress_ = await parseSmartAddress(toAddress || await inputUntil(
+                "0", "Insert checksum address or account index:", (v) => {
+                    return /^(\d+)|(0x[a-fA-F0-9]{40})$/.test(v);
+                }, "The value is not a valid address or account index",
+                forceNonInteractive
+            ), hre);
+            const contract = await getDeployedContract(deploymentId, await selectDeployedContract(contractId, deploymentId, forceNonInteractive, hre), hre);
             const connected = contract.connect(usingAccount_);
-            await connected.transferOwnership(toAddress);
-            console.log("The contract was successfully transferred to the new address: " + toAddress);
+            await connected.transferOwnership(toAddress_);
+            console.log("The contract was successfully transferred to the new address: " + toAddress_);
         } catch(e) {
             console.error(
                 "Could not transfer the contract's ownership. This might happen because of many " +
@@ -30,11 +37,12 @@ cantripsScope.task("transfer-ownership", "Transfers the ownership of a deployed 
 
 
 cantripsScope.task("get-ownership", "Gets the ownership of a deployed contract")
-    .addPositionalParam("contractId", "A contract id, specified as DeploymentModule#ContractId for the current network")
     .addOptionalParam("deploymentId", "The deployment id to get the contract from (it MUST match the current network)")
-    .setAction(async ({ contractId, deploymentId }, hre, runSuper) => {
+    .addOptionalParam("contractId", "A contract id, specified as DeploymentModule#ContractId for the current network")
+    .addFlag("forceNonInteractive", "Raise an error if one or more params were not specified and the action would become interactive")
+    .setAction(async ({contractId, deploymentId, forceNonInteractive}, hre, runSuper) => {
         try {
-            const contract = await getDeployedContract(deploymentId, contractId, hre);
+            const contract = await getDeployedContract(deploymentId, await selectDeployedContract(contractId, deploymentId, forceNonInteractive, hre), hre);
             const owner = await contract.owner();
             const signers = await hre.ethers.getSigners();
             const signerIndex = signers.findIndex((e) => {

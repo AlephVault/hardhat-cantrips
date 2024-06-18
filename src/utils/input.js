@@ -1,7 +1,10 @@
 const enquirer = require("enquirer");
+const {checkNotInteractive} = require("./common");
 
 
-async function inputUntil(initial, prompt, test, errorMessage) {
+async function inputUntil(initial, prompt, test, errorMessage, forceNonInteractive) {
+    checkNotInteractive(forceNonInteractive);
+
     while(true) {
         const contractName = await new enquirer.Input({
             message: prompt,
