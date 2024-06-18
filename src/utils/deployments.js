@@ -1,6 +1,7 @@
 const fs = require("fs");
-const {getProjectPrefix, removeProjectPrefix, normalizeByProjectPrefix, traverseDirectory} = require("./common");
+const {getProjectPrefix, removeProjectPrefix, normalizeByProjectPrefix, traverseDirectory, checkNotInteractive} = require("./common");
 const path = require("path");
+const enquirer = require("enquirer");
 
 
 /**
@@ -232,6 +233,62 @@ function isModuleInDeployEverything(file, external, hre) {
 
 
 /**
+ * Lists all the deployed contract ids in a deployment id.
+ * @param deploymentId The deployment id to get the contracts from.
+ * @param hre The hardhat runtime environment.
+ * @returns {Promise<string[]>} The list of contract ids.
+ */
+async function listDeployedContracts(deploymentId, hre) {
+    // 1. Determine the actual deployment id.
+    const chainId = (await hre.ethers.provider.getNetwork()).chainId;
+    deploymentId ||= `chain-${chainId}`;
+
+    // 2. Load the file and get the list of ids.
+    const fullPath = path.resolve(
+        hre.config.paths.root, "ignition", "deployments", deploymentId, "deployed_addresses.json"
+    );
+    return Object.keys(JSON.parse(fs.readFileSync(fullPath, {encoding: 'utf8'})));
+}
+
+
+/**
+ * Asks to select one of the deployed contracts, if the initial one is not
+ * valid or not (yet) deployed.
+ * @param deployedContractId The initial deployed contract id.
+ * @param deploymentId The id of the deployment to focus on.
+ * @param forceNonInteractive Whether to raise an error if this call becomes
+ * interactive due to the contract id not being valid.
+ * @param hre The hardhat runtime environment.
+ * @returns {Promise<string>} The id of the selected deployed contract.
+ */
+async function selectDeployedContract(deployedContractId, deploymentId, forceNonInteractive, hre) {
+    // 1. Get the current options and also test whether the initially
+    //    set deployed contract id is among them or not.
+    deployedContractId = (deployedContractId || "").trim();
+    const choices = await listDeployedContracts(deploymentId, hre);
+    if (choices.indexOf(deployedContractId) >= 0) return deployedContractId;
+
+    // 2. Go interactive and ask for a new one.
+    checkNotInteractive(forceNonInteractive);
+
+    // 3. Prompt.
+    if (deployedContractId) {
+        console.log(
+            "The id you selected does not belong to a deployed contract (either " +
+            "it is not valid, or you did not run the corresponding ignition deployment " +
+            "task or the deploy-everything task"
+        );
+    }
+    let prompt = new enquirer.Select({
+        name: "deployedContractId",
+        message: "Select a deployed contract:",
+        choices
+    });
+    return await prompt.run();
+}
+
+
+/**
  * Inspects the ignition addresses for a deployment id and retrieves
    a contract instance from a given deployed contract (future) id.
  * @param deploymentId The deployment id.
@@ -289,5 +346,6 @@ async function getDeployedContract(deploymentId, contractId, hre) {
 
 module.exports = {
     addDeployEverythingModule, removeDeployEverythingModule, isModuleInDeployEverything,
-    listDeployEverythingModules, runDeployEverythingModules, getDeployedContract
+    listDeployEverythingModules, runDeployEverythingModules, getDeployedContract,
+    listDeployedContracts, selectDeployedContract
 }
