@@ -46,6 +46,7 @@ cantripsScope.task("get-metadata", "Gets the metadata of an ERC20 contract")
             console.log("Name: " + (await contract.name()));
             console.log("Symbol: " + (await contract.symbol()));
             console.log("Decimals: " + (await contract.decimals()));
+            console.log("Total Supply: " + (await contract.totalSupply()));
         } catch(e) {
             console.error(
                 "Could not get the metadata. This might happen because of many reasons, e.g. " +
