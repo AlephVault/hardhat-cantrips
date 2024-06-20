@@ -62,7 +62,7 @@ contract #CONTRACT_NAME# is ERC1155 {
 
         // Feel free to add more things to the "properties" sub-dictionary.
         return string(abi.encodePacked("data:application/json;base64,", Base64.encode(abi.encodePacked(
-            '{"name":"', name, '","description":"', description, '","image":"', image,
+            '{"name": "', name, '","description": "', description, '","image": "', image,
             '","properties":{}}'
         ))));
     }

@@ -54,7 +54,7 @@ contract #CONTRACT_NAME# is ERC721 {
         (string memory name, string memory description, string memory image) = _getTokenMetadata(tokenId);
 
         return string(abi.encodePacked("data:application/json;base64,", Base64.encode(abi.encodePacked(
-           '{"name:","', name, '", "description": "', description, '", "image": "', image, '"}'
+           '{"name": "', name, '", "description": "', description, '", "image": "', image, '"}'
         ))));
     }
 }
