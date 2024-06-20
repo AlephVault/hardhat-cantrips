@@ -87,7 +87,7 @@ cantripsScope.task("erc20:transfer", "Transfers an amount of tokens to another a
             const usingAccount_ = await parseAccount(usingAccount || "0", hre);
             const toAddress_ = await parseSmartAddress(await givenOrInputUntil(
                 toAddress,
-                "0", "Insert checksum address or account index:", (v) => {
+                "0", "Insert target checksum address or account index:", (v) => {
                     return /^(\d+)|(0x[a-fA-F0-9]{40})$/.test(v);
                 }, "The value is not a valid address or account index", forceNonInteractive
             ), hre);
@@ -100,6 +100,8 @@ cantripsScope.task("erc20:transfer", "Transfers an amount of tokens to another a
 
             // Perform the transfer.
             await contract.connect(usingAccount_).transfer(toAddress_, amount_);
+            console.log(`Transfer done successfully`);
+            console.log(`Transferred from ${usingAccount_.address} to ${toAddress_} a token amount of ${amount_} wei successfully.`);
         } catch(e) {
             console.error(
                 "Could not transfer the tokens. This might happen because of many reasons, e.g. " +
@@ -130,7 +132,7 @@ cantripsScope.task("erc20:mint", "Mints an amount of tokens to another account o
             const usingAccount_ = await parseAccount(usingAccount || "0", hre);
             const toAddress_ = await parseSmartAddress(await givenOrInputUntil(
                 toAddress,
-                "0", "Insert checksum address or account index:", (v) => {
+                "0", "Insert target checksum address or account index:", (v) => {
                     return /^(\d+)|(0x[a-fA-F0-9]{40})$/.test(v);
                 }, "The value is not a valid address or account index", forceNonInteractive
             ), hre);
@@ -143,6 +145,7 @@ cantripsScope.task("erc20:mint", "Mints an amount of tokens to another account o
 
             // Perform the transfer.
             await contract.connect(usingAccount_).mint(toAddress_, amount_);
+            console.log(`Minted to ${toAddress_} a token amount of ${amount_} wei successfully.`);
         } catch(e) {
             console.error(
                 "Could not mint the tokens. This might happen because of many reasons, e.g. " +
