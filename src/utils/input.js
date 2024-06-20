@@ -19,6 +19,12 @@ async function inputUntil(initial, prompt, test, errorMessage, forceNonInteracti
 }
 
 
+async function givenOrInputUntil(given, initial, prompt, test, errorMessage, forceNonInteractive) {
+    given ||= "";
+    return test(given) ? given : await inputUntil(initial, prompt, test, errorMessage, forceNonInteractive);
+}
+
+
 module.exports = {
-    inputUntil
+    inputUntil, givenOrInputUntil
 }

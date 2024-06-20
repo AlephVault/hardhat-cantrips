@@ -1,5 +1,5 @@
 const {cantripsScope} = require("./common");
-const {inputUntil} = require("../utils/input");
+const {givenOrInputUntil} = require("../utils/input");
 const {parseSmartAddress, parseAccount} = require("../utils/accounts");
 const {getDeployedContract, selectDeployedContract} = require("../utils/deployments");
 const {parseAmount} = require("../utils/amounts");
@@ -46,7 +46,8 @@ cantripsScope.task("erc20:get-balance", "Gets the ERC20 balance of an account")
             );
 
             // Get the address to query balance from.
-            const address_ = await parseSmartAddress(address || await inputUntil(
+            const address_ = await parseSmartAddress(await givenOrInputUntil(
+                address,
                 "0", "Insert checksum address or account index:", (v) => {
                     return /^(\d+)|(0x[a-fA-F0-9]{40})$/.test(v);
                 }, "The value is not a valid address or account index",
@@ -84,12 +85,14 @@ cantripsScope.task("erc20:transfer", "Transfers an amount of tokens to another a
 
             // Get the transfer parameters.
             const usingAccount_ = await parseAccount(usingAccount || "0", hre);
-            const toAddress_ = await parseSmartAddress(toAddress || await inputUntil(
+            const toAddress_ = await parseSmartAddress(await givenOrInputUntil(
+                toAddress,
                 "0", "Insert checksum address or account index:", (v) => {
                     return /^(\d+)|(0x[a-fA-F0-9]{40})$/.test(v);
                 }, "The value is not a valid address or account index", forceNonInteractive
             ), hre);
-            const amount_ = parseAmount(amount || await inputUntil(
+            const amount_ = parseAmount(await givenOrInputUntil(
+                amount,
                 "1eth", "Insert amount (e.g. 1500000000000000000 or 1.5eth)", (v) => {
                     return /^(\d+(\.\d+)?)\s*eth$/i.test(v.trim());
                 }, "The given amount is not valid", forceNonInteractive
@@ -125,12 +128,14 @@ cantripsScope.task("erc20:mint", "Mints an amount of tokens to another account o
 
             // Get the transfer parameters.
             const usingAccount_ = await parseAccount(usingAccount || "0", hre);
-            const toAddress_ = await parseSmartAddress(toAddress || await inputUntil(
+            const toAddress_ = await parseSmartAddress(await givenOrInputUntil(
+                toAddress,
                 "0", "Insert checksum address or account index:", (v) => {
                     return /^(\d+)|(0x[a-fA-F0-9]{40})$/.test(v);
                 }, "The value is not a valid address or account index", forceNonInteractive
             ), hre);
-            const amount_ = parseAmount(amount || await inputUntil(
+            const amount_ = parseAmount(await givenOrInputUntil(
+                amount,
                 "1eth", "Insert amount (e.g. 1500000000000000000 or 1.5eth)", (v) => {
                     return /^(\d+(\.\d+)?)\s*eth$/i.test(v.trim());
                 }, "The given amount is not valid", forceNonInteractive

@@ -1,6 +1,7 @@
-const {cantripsScope, inputUntil} = require("./common");
+const {cantripsScope} = require("./common");
 const {parseSmartAddress, parseAccount} = require("../utils/accounts");
 const {parseAmount} = require("../utils/amounts");
+const {givenOrInputUntil} = require("../utils/input");
 
 
 cantripsScope.task("transfer", "Sends ETH from an account (by index) to another account (by index or address)")
@@ -11,12 +12,14 @@ cantripsScope.task("transfer", "Sends ETH from an account (by index) to another 
     .setAction(async ({usingAccount, amount, toAddress, forceNonInteractive}, hre, runSuper) => {
         try {
             const usingAccount_ = await parseAccount(usingAccount || "0", hre);
-            const toAddress_ = await parseSmartAddress(toAddress || await inputUntil(
+            const toAddress_ = await parseSmartAddress(await givenOrInputUntil(
+                toAddress,
                 "0", "Insert checksum address or account index:", (v) => {
                     return /^(\d+)|(0x[a-fA-F0-9]{40})$/.test(v);
                 }, "The value is not a valid address or account index", forceNonInteractive
             ), hre);
-            const nativeAmount = parseAmount(amount || await inputUntil(
+            const nativeAmount = parseAmount(await givenOrInputUntil(
+                amount,
                 "1eth", "Insert amount (e.g. 1500000000000000000 or 1.5eth)", (v) => {
                     return /^(\d+(\.\d+)?)\s*eth$/i.test(v.trim());
                 }, "The given amount is not valid", forceNonInteractive

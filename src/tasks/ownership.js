@@ -1,5 +1,5 @@
 const {cantripsScope} = require("./common");
-const {inputUntil} = require("../utils/input");
+const {givenOrInputUntil} = require("../utils/input");
 const {parseSmartAddress, parseAccount} = require("../utils/accounts");
 const {getDeployedContract, selectDeployedContract} = require("../utils/deployments");
 
@@ -13,7 +13,8 @@ cantripsScope.task("transfer-ownership", "Transfers the ownership of a deployed 
     .setAction(async ({usingAccount, toAddress, contractId, deploymentId, forceNonInteractive}, hre, runSuper) => {
         try {
             const usingAccount_ = await parseAccount(usingAccount || "0", hre);
-            const toAddress_ = await parseSmartAddress(toAddress || await inputUntil(
+            const toAddress_ = await parseSmartAddress(await givenOrInputUntil(
+                toAddress,
                 "0", "Insert checksum address or account index:", (v) => {
                     return /^(\d+)|(0x[a-fA-F0-9]{40})$/.test(v);
                 }, "The value is not a valid address or account index",
