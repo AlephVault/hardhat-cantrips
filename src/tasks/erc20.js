@@ -100,7 +100,6 @@ cantripsScope.task("erc20:transfer", "Transfers an amount of tokens to another a
 
             // Perform the transfer.
             await contract.connect(usingAccount_).transfer(toAddress_, amount_);
-            console.log(`Transfer done successfully`);
             console.log(`Transferred from ${usingAccount_.address} to ${toAddress_} a token amount of ${amount_} wei successfully.`);
         } catch(e) {
             console.error(
@@ -115,7 +114,7 @@ cantripsScope.task("erc20:transfer", "Transfers an amount of tokens to another a
 
 
 cantripsScope.task("erc20:mint", "Mints an amount of tokens to another account or address")
-    .addOptionalParam("amount", "The amount to send, e.g. 1eth, 2.5eth or 3000000000000000000")
+    .addOptionalParam("amount", "The amount to mint, e.g. 1eth, 2.5eth or 3000000000000000000")
     .addOptionalParam("toAddress", "The index (0 to number of accounts - 1), or address, of the account to send ETH to")
     .addOptionalParam("usingAccount", "The index (0 to number of accounts - 1) of the account to send ETH from")
     .addOptionalParam("contractId", "A contract id, specified as DeploymentModule#ContractId for the current network")
@@ -145,7 +144,7 @@ cantripsScope.task("erc20:mint", "Mints an amount of tokens to another account o
 
             // Perform the transfer.
             await contract.connect(usingAccount_).mint(toAddress_, amount_);
-            console.log(`Minted to ${toAddress_} a token amount of ${amount_} wei successfully.`);
+            console.log(`Minted to ${toAddress_} a token amount of ${amount_} successfully.`);
         } catch(e) {
             console.error(
                 "Could not mint the tokens. This might happen because of many reasons, e.g. " +
