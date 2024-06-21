@@ -111,8 +111,8 @@ cantripsScope.task("erc721:mint", "Mints, for an account or address, a token in 
     .addOptionalParam("contractId", "A contract id, specified as DeploymentModule#ContractId for the current network")
     .addOptionalParam("deploymentId", "The deployment id to get the contract from (it MUST match the current network)")
     .addOptionalParam("tokenId", "The token id (a positive base-10 or base-16 integer)")
-    .addOptionalParam("toAddress", "The index (0 to number of accounts - 1), or address, of the account to send ETH to")
-    .addOptionalParam("usingAccount", "The index (0 to number of accounts - 1) of the account to send ETH from")
+    .addOptionalParam("toAddress", "The index (0 to number of accounts - 1), or address, of the account to mint a token to")
+    .addOptionalParam("usingAccount", "The index (0 to number of accounts - 1) of the account to mint a token with")
     .addFlag("forceNonInteractive", "Raise an error if one or more params were not specified and the action would become interactive")
     .setAction(async ({contractId, deploymentId, forceNonInteractive, tokenId, toAddress, usingAccount}, hre, runSuper) => {
         try {
@@ -157,8 +157,8 @@ cantripsScope.task("erc721:transfer", "Transfers, to an account or address, a to
     .addOptionalParam("contractId", "A contract id, specified as DeploymentModule#ContractId for the current network")
     .addOptionalParam("deploymentId", "The deployment id to get the contract from (it MUST match the current network)")
     .addOptionalParam("tokenId", "The token id (a positive base-10 or base-16 integer)")
-    .addOptionalParam("toAddress", "The index (0 to number of accounts - 1), or address, of the account to send ETH to")
-    .addOptionalParam("usingAccount", "The index (0 to number of accounts - 1) of the account to send ETH from")
+    .addOptionalParam("toAddress", "The index (0 to number of accounts - 1), or address, of the account to send a token to")
+    .addOptionalParam("usingAccount", "The index (0 to number of accounts - 1) of the account to send a token from")
     .addFlag("forceNonInteractive", "Raise an error if one or more params were not specified and the action would become interactive")
     .setAction(async ({contractId, deploymentId, forceNonInteractive, tokenId, toAddress, usingAccount}, hre, runSuper) => {
         try {

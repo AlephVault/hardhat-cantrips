@@ -5,10 +5,10 @@ const {getDeployedContract, selectDeployedContract} = require("../utils/deployme
 
 
 cantripsScope.task("transfer-ownership", "Transfers the ownership of a deployed contract to another account or address")
-    .addOptionalParam("toAddress", "The index (0 to number of accounts - 1), or address, of the account to send ETH to")
+    .addOptionalParam("toAddress", "The index (0 to number of accounts - 1), or address, of the account to transfer the ownership to")
     .addOptionalParam("contractId", "A contract id, specified as DeploymentModule#ContractId for the current network")
     .addOptionalParam("deploymentId", "The deployment id to get the contract from (it MUST match the current network)")
-    .addOptionalParam("usingAccount", "The index (0 to number of accounts - 1) of the account to send ETH from")
+    .addOptionalParam("usingAccount", "The index (0 to number of accounts - 1) of the account to transfer the ownership with")
     .addFlag("forceNonInteractive", "Raise an error if one or more params were not specified and the action would become interactive")
     .setAction(async ({usingAccount, toAddress, contractId, deploymentId, forceNonInteractive}, hre, runSuper) => {
         try {
