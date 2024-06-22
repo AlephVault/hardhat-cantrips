@@ -80,7 +80,8 @@ const OPTIONS = [
     {name: "OwnedERC721", message: "An owned, OpenZeppelin-powered, ERC721 contract file"},
     {name: "ERC1155", message: "A regular, OpenZeppelin-powered, ERC1155 contract file"},
     {name: "OwnedERC1155", message: "An owned, OpenZeppelin-powered, ERC1155 contract file"},
-    {name: "PriceFeed", message: "A ChainLink PriceFeed contract mock file"}
+    {name: "PriceFeed", message: "A ChainLink PriceFeed contract mock file"},
+    {name: "FunctionsClient", message: "A ChainLink FunctionsClient contract file"}
 ]
 
 
@@ -92,6 +93,7 @@ const PATHS = {
     ERC1155: "contracts/ERC1155",
     OwnedERC1155: "contracts/OwnedERC1155",
     PriceFeed: "contracts/chainlink/PriceFeed",
+    FunctionsClient: "contracts/chainlink/FunctionsClient",
 }
 
 
