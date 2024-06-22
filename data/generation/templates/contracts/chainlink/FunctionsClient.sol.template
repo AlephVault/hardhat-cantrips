@@ -56,24 +56,6 @@ contract #CONTRACT_NAME# is FunctionsClient {
      */
     bytes32[] public requestIds;
 
-    /**
-     * This event tells that a request was issued.
-     */
-    event Request(
-        bytes32 indexed requestId,
-        address indexed sender
-    );
-
-    /**
-     * This event tells that a response has arrived.
-     * Yes: It is legal to modify this and add more data.
-     */
-    event Response(
-        bytes32 indexed requestId,
-        bytes response,
-        bytes err
-    );
-
     //////// Must-tune parameters and methods.
 
     // See https://docs.chain.link/chainlink-functions/supported-networks
@@ -264,9 +246,7 @@ contract #CONTRACT_NAME# is FunctionsClient {
         });
         requestIds.push(lastRequestId);
 
-        // 4. For other contract calls, return it. For EOA calls,
-        //    emit the event.
-        emit Request(lastRequestId, msg.sender);
+        // 4. For other contract calls, return it.
         return lastRequestId;
     }
 
@@ -291,9 +271,5 @@ contract #CONTRACT_NAME# is FunctionsClient {
         requests[requestId].err = err;
 
         // Yes: you can attend more data arrival here.
-
-        // Emit an event to log the response. Ensure you send all
-        // the data you defined in the Response event definition.
-        emit Response(requestId, response, err);
     }
 }
