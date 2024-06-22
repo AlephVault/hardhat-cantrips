@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity #SOLIDITY_VERSION#;
 
-import {FunctionsClient} from "@chainlink/contracts/src/v0.8/functions/dev/v1_0_0/FunctionsClient.sol";
-import {FunctionsRequest} from "@chainlink/contracts/src/v0.8/functions/dev/v1_0_0/libraries/FunctionsRequest.sol";
+import {FunctionsClient} from "@chainlink/contracts/src/v0.8/functions/v1_0_0/FunctionsClient.sol";
+import {FunctionsRequest} from "@chainlink/contracts/src/v0.8/functions/v1_0_0/libraries/FunctionsRequest.sol";
 
 /**
  * This is a Chainlink functions executor contract. It will relate
@@ -252,7 +252,7 @@ contract #CONTRACT_NAME# is FunctionsClient {
             req.encodeCBOR(),
             subscriptionId,
             gasLimit,
-            donID
+            donId
         );
 
         // 3. Store the request id.
