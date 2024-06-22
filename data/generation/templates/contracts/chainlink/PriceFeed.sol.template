@@ -2,14 +2,16 @@
 pragma solidity #SOLIDITY_VERSION#;
 import "@chainlink/contracts/src/v0.8/tests/MockV3Aggregator.sol";
 
-// You'll have a class named PriceFeed.
-// You'll be able to deploy this contract MANY TIMES AS YOU NEED,
-// but I'd suggest you implement a separate Ignition module, even
-// when using the same contract artifact (here, PriceFeed). This
-// contract is provided by Chainlink and works exactly as a remote
-// (deployed) price feed would work. Typically, you'll not need to
-// edit this class in any way.
-
-contract PriceFeed is MockV3Aggregator {
+/**
+ * This is a price feed mock and works exactly the same as the given
+ * price feeds in Chainlink. You can generate and deploy many of these
+ * contracts as needed (e.g. choosing a different amount of decimals)
+ * into your local network, and ensure you reference, instead, the
+ * proper instances on live testnets / mainnets instead of deploying
+ * these instances yourself. You're free to modify the constructor,
+ * but always ensure your deployment file will match the arguments you
+ * are allowing/removing.
+ */
+contract #CONTRACT_NAME# is MockV3Aggregator {
     constructor(uint8 _decimals, int256 _initialAnswer) MockV3Aggregator(_decimals, _initialAnswer) {}
 }
