@@ -1,0 +1,299 @@
+// SPDX-License-Identifier: MIT
+pragma solidity #SOLIDITY_VERSION#;
+
+import {FunctionsClient} from "@chainlink/contracts/src/v0.8/functions/dev/v1_0_0/FunctionsClient.sol";
+import {FunctionsRequest} from "@chainlink/contracts/src/v0.8/functions/dev/v1_0_0/libraries/FunctionsRequest.sol";
+
+/**
+ * This is a Chainlink functions executor contract. It will relate
+ * to a certain network and subscription and will forward a call
+ * to be executed (currently, in a JS/DENO VM) and then back-posted
+ * to this contract.
+ *
+ * Please red this code carefully for you will need to properly tune
+ * these parameters.
+ */
+contract #CONTRACT_NAME# is FunctionsClient {
+    using FunctionsRequest for FunctionsRequest.Request;
+
+    //////// Core structures.
+
+    /**
+     * This stands for a tracking for each performed request.
+     * It serves the purpose of debugging and letting the user
+     * the right to track what was going on when running the
+     * request(s).
+     */
+    struct RequestStatus {
+        /**
+         * Flag telling that the request was actually issued.
+         */
+        bool exists;
+
+        /**
+         * Flag telling whether the request was fulfilled or not yet.
+         */
+        bool fulfilled;
+
+        /**
+         * The response (arbitrary bytes), on success.
+         */
+        bytes response;
+
+        /**
+         * The bytes (arbitrary bytes), on error.
+         */
+        bytes err;
+    }
+
+    /**
+     * Provides the request data and status for a given id.
+     */
+    mapping(bytes32 => RequestStatus) public requests;
+
+    /**
+     * Provides the list of issued requests.
+     */
+    bytes32[] public requestIds;
+
+    /**
+     * This event tells that a request was issued.
+     */
+    event Request(
+        bytes32 indexed requestId,
+        address indexed sender
+    );
+
+    /**
+     * This event tells that a response has arrived.
+     * Yes: It is legal to modify this and add more data.
+     */
+    event Response(
+        bytes32 indexed requestId,
+        bytes response,
+        bytes err
+    );
+
+    //////// Must-tune parameters and methods.
+
+    // See https://docs.chain.link/chainlink-functions/supported-networks
+    // for the appropriate values for testnets / mainnets.
+
+    /**
+     * This is the DON ID of the router. It will be set in the
+     * constructor at deployment time.
+     */
+    bytes32 private donID;
+
+    /**
+     * This is the subscription id. A contract should have only
+     * one subscription id to execute the functions (and fund
+     * the calls properly). It will be set in the constructor
+     * at deployment time.
+     */
+    uint64 private subscriptionId;
+
+    /**
+     * This is the gas limit for the fulfill method (it is given
+     * by our implementation of fulfillRequest). This amount is
+     * mapped to some degree of LINK consumption so we have the
+     * ability to prevent ourselves and clamp the amount of gas
+     * that method should consume.
+     */
+    uint32 private gasLimit; // e.g. 300000;
+
+    /**
+     * This is the payload to send. There are three types of
+     * payload: external URL, DON-storage reference, or inline
+     * source code. External URLs should be ipfs:// url, so they
+     * guarantee being immutable with a very high probability.
+     * DON-hosted sources have no limitations other than those
+     * provided by the DON (and their requirements). Inline code
+     * should not be that big. One reason is that the contracts
+     * still have a code storage limitation of 24kb, so typically
+     * this should involve some API access and that's it. The
+     * end result must return one of the three available calls in
+     * the Functions class (in this case: Functions.encodeString).
+     */
+    string private payload =
+        "return Functions.encodeString('Hello World');";
+
+    /**
+     * This is the location of the payload. The available options
+     * are .Inline (in this case, the payload must be the source
+     * code itself as a string), .Remote (in this case, the payload
+     * must be a URL to the source code) or .DONHosted (this case
+     * involves a DON storage reference as the payload).
+     */
+    FunctionsRequest.Location location = FunctionsRequest.Location.Inline;
+
+    /**
+     * Where are the secrets stored? If any. Learn how to do this here:
+     * - Remote: https://docs.chain.link/chainlink-functions/tutorials/api-use-secrets-offchain
+     * - DONHosted: https://docs.chain.link/chainlink-functions/tutorials/api-use-secrets
+     */
+    enum SecretsType {
+        None, // No secrets at all
+        Remote, // They're encrypted and stored remotely
+        DONHosted // They're hosted in the DON
+    }
+
+    /**
+     * Where are the secrets stored? If any.
+     */
+    SecretsType private secretsType;
+
+    /**
+     * On secretsType==SecretsType.Remote, this is the reference.
+     */
+    bytes private remoteSecretsReference;
+
+    /**
+     * On secretsType==SecretsType.DONHosted, this is the slot id.
+     */
+    uint8 private donSecretsSlotId;
+
+    /**
+     * On secretsType==SecretsType.DONHosted, this is the code version.
+     */
+    uint64 private donSecretsVersion;
+
+    /**
+     * Prepares a request to be sent. This can be done in several
+     * ways (as described in the `payload`) that will be commented
+     * here.
+     */
+    function prepareRequest(FunctionsRequest.Request memory req) internal {
+        // 1. Add as many arguments you need to prepareRequest().
+        //    As by default, it has no arguments (save for `req`,
+        //    which must always be here).
+
+        // 2. Initialize the request. This involves setting the
+        //    payload location, type (JavaScript) and value. Keep
+        //    this call as is.
+        req.initializeRequest(
+            location, FunctionsRequest.CodeLanguage.JavaScript,
+            payload
+        );
+
+        // 3. Choose whether you want to send string arguments
+        //    through `setArgs` and/or bytes arguments with
+        //    `setBytesArgs`.
+
+        /* Example with 2 string args */
+        // string[] memory args = new string[](2);
+        // args[0] = "Hello";
+        // args[1] = "World";
+        // req.setArgs(args);
+
+        /* Example with 2 bytes args */
+        // bytes[] memory bytesArgs = new bytes[](2);
+        // bytesArgs[0] = hex"0011223344556677";
+        // bytesArgs[1] = hex"8899aabbccddeeff";
+        // bytes.setBytesArgs(byesArgs);
+
+        // 4. If you source code involves secrets, like credentials
+        //    to be used against an API service, remember to NOT
+        //    hardcode them in your source code but instead read
+        //    the proper secrets management.
+        if (secretsType == SecretsType.Remote) {
+            req.addSecretsReference(remoteSecretsReference);
+        } else if (secretsType == SecretsType.DONHosted) {
+            req.addDONHostedSecrets(donSecretsSlotId, donSecretsVersion);
+        }
+    }
+
+    //////// Constructor.
+
+    /**
+     * Arguments to constructor:
+     * - _router: The address of the router.
+     * - _donId: The oracle id to use.
+     * - _subscriptionId: The id of the subscription.
+     * - _gasLimit: The maximum amount of gas to spend in the callback.
+     * - _location: The location of the payload.
+     * - _payload: The payload (according to the location).
+     * - _secretsType: Whether to use secrets, and which type.
+     */
+    constructor(
+        address _router, bytes32 memory _donId, uint64 _subscriptionId,
+        uint32 _gasLimit, string memory _payload, FunctionsRequest.Location _location,
+        SecretsType _secretsType, bytes memory _remoteSecretsReference,
+        uint8 _donSecretsSlotId, uint64 _donSecretsVersion
+    ) FunctionsClient(_router) {
+        subscriptionId = _subscriptionId;
+        donId = _donId;
+        gasLimit = _gasLimit;
+        payload = _payload;
+        location = _location;
+        secretsType = _secretsType;
+        remoteSecretsReference = _remoteSecretsReference;
+        donSecretsSlotId = _donSecretsSlotId;
+        donSecretsVersion = _donSecretsVersion;
+    }
+
+    //////// The function and its callback.
+
+    /**
+     * Invokes the function stated in the source code.
+     */
+    function invoke() external returns (bytes32 requestId) {
+        // 1. Add as many arguments you need to prepareRequest().
+        //    As by default, it has no arguments (save for `req`,
+        //    which must always be here). Pass all of them to
+        //    the prepareRequest (they should match completely).
+        FunctionsRequest.Request memory req;
+        prepareRequest(req);
+
+        // 2. Send the request and get its id. You can add more
+        //    code here to, perhaps, relate one or more of the
+        //    given arguments to this received request id.
+        lastRequestId = _sendRequest(
+            req.encodeCBOR(),
+            subscriptionId,
+            gasLimit,
+            donID
+        );
+
+        // 3. Store the request id.
+        requests[lastRequestId] = RequestStatus({
+            exists: true,
+            fulfilled: false,
+            response: "",
+            err: ""
+        });
+        requestIds.push(lastRequestId);
+
+        // 4. For other contract calls, return it. For EOA calls,
+        //    emit the event.
+        emit Request(lastRequestId, msg.sender);
+        return lastRequestId;
+    }
+
+    /**
+     * This is the callback.
+     */
+    function fulfillRequest(
+        bytes32 requestId,
+        bytes memory response,
+        bytes memory err
+    ) internal override {
+        require(requests[requestId].exists, "request not found");
+
+        // Store the response. You can also process the response
+        // by converting it depending on what's the return sent
+        // by the underlying javascript code:
+        // - return Functions.encodeString(...) -> string(result).
+        // - return Functions.encodeUint256 -> (uint256 v) = abi.decode(result, (uint256));
+        // - return Functions.encodeInt256 -> (int256 v) = abi.decode(result, (int256));
+        requests[requestId].fulfilled = true;
+        requests[requestId].response = response;
+        requests[requestId].err = err;
+
+        // Yes: you can attend more data arrival here.
+
+        // Emit an event to log the response. Ensure you send all
+        // the data you defined in the Response event definition.
+        emit Response(requestId, lastResponse, lastError);
+    }
+}
