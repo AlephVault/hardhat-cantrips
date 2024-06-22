@@ -83,7 +83,7 @@ contract #CONTRACT_NAME# is FunctionsClient {
      * This is the DON ID of the router. It will be set in the
      * constructor at deployment time.
      */
-    bytes32 private donID;
+    bytes32 private donId;
 
     /**
      * This is the subscription id. A contract should have only
@@ -216,7 +216,7 @@ contract #CONTRACT_NAME# is FunctionsClient {
      * - _secretsType: Whether to use secrets, and which type.
      */
     constructor(
-        address _router, bytes32 memory _donId, uint64 _subscriptionId,
+        address _router, bytes32 _donId, uint64 _subscriptionId,
         uint32 _gasLimit, string memory _payload, FunctionsRequest.Location _location,
         SecretsType _secretsType, bytes memory _remoteSecretsReference,
         uint8 _donSecretsSlotId, uint64 _donSecretsVersion
@@ -248,7 +248,7 @@ contract #CONTRACT_NAME# is FunctionsClient {
         // 2. Send the request and get its id. You can add more
         //    code here to, perhaps, relate one or more of the
         //    given arguments to this received request id.
-        lastRequestId = _sendRequest(
+        bytes32 lastRequestId = _sendRequest(
             req.encodeCBOR(),
             subscriptionId,
             gasLimit,
@@ -294,6 +294,6 @@ contract #CONTRACT_NAME# is FunctionsClient {
 
         // Emit an event to log the response. Ensure you send all
         // the data you defined in the Response event definition.
-        emit Response(requestId, lastResponse, lastError);
+        emit Response(requestId, response, err);
     }
 }
