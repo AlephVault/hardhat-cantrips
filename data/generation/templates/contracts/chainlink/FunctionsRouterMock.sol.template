@@ -34,26 +34,77 @@ contract FunctionsRouterMock is IFunctionsRouter, Ownable {
     // There will be no concept of gas limit validation in this mock.
     function isValidCallbackGasLimit(uint64 subscriptionId, uint32 callbackGasLimit) external view {}
 
-    // This mock does not care about contracts lists.
+    // Mocks the contracts from the DON ids.
+    mapping(bytes32 => address) private contractsByDonId;
+
+    // Mocks the set of contracts' DON ids.
+    bytes32[] private contractDonIds;
+
+    // Mocks the PROPOSED contracts from the DON ids.
+    mapping(bytes32 => address) private proposedContractsByDonId;
+
+    // Mocks the set of proposed contracts' DON ids.
+    bytes32[] private proposedContractDonIds;
+
+    // Mocks the set of proposed contracts' from the values.
+    address[] private proposedContractAddresses;
+
+    /**
+     * Returns the contract corresponding to a DON id.
+     */
     function getContractById(bytes32 id) external view returns (address) {
-        return address(0);
+        return contractsByDonId[id];
     }
 
-    // This mock does not care about proposed contracts lists.
+    /**
+     * Returns the proposed contract corresponding to a DON ids.
+     */
     function getProposedContractById(bytes32 id) external view returns (address) {
-        return address(0);
+        return proposedContractsByDonId[id];
     }
 
-    // This mock does not care about proposed contracts lists.
+    /**
+     * Gets the set of proposed contracts for the DON ids.
+     */
     function getProposedContractSet() external view returns (bytes32[] memory, address[] memory) {
-        return (new bytes32[](0), new address[](0));
+        return (proposedContractDonIds, proposedContractAddresses);
     }
 
-    // This mock does not care about proposed contracts.
-    function proposeContractsUpdate(bytes32[] memory proposalSetIds, address[] memory proposalSetAddresses) external {}
+    /**
+     * Updates the set of proposed contracts.
+     */
+    function proposeContractsUpdate(
+        bytes32[] memory proposalSetIds, address[] memory proposalSetAddresses
+    ) external onlyOwner {
+        require(
+            proposalSetIds.length == proposalSetAddresses.length,
+            "FunctionsRouterMock: ids/addresses"
+        );
+        uint256 length = proposedContractDonIds.length;
+        for(uint256 index = 0; index < length; index++) {
+            delete proposedContractsByDonId[proposedContractDonIds[index]];
+        }
+        delete proposedContractDonIds;
+        delete proposedContractAddresses;
+        proposedContractDonIds = proposalSetIds;
+        proposedContractAddresses = proposalSetAddresses;
+    }
 
-    // This mock does not care about proposed contracts.
-    function updateContracts() external {}
+    /**
+     * Updates the contracts from the proposed contracts.
+     */
+    function updateContracts() external onlyOwner {
+        uint256 length = contractDonIds.length;
+        for(uint256 index = 0; index < length; index++) {
+            delete contractsByDonId[contractDonIds[index]];
+        }
+        delete contractDonIds;
+        length = proposedContractDonIds.length;
+        for(uint256 index = 0; index < length; index++) {
+            contractsByDonId[proposedContractDonIds[index]] = proposedContractAddresses[index];
+            contractDonIds.push(proposedContractDonIds[index]);
+        }
+    }
 
     // This mock does not care about pausing.
     function pause() external {}
@@ -88,13 +139,9 @@ contract FunctionsRouterMock is IFunctionsRouter, Ownable {
     /**
      * Adds a mocked subscription.
      */
-    function addMockSubscription(uint64 subscriptionId, address owner) external {
-        if (owner == address(0)) {
-            revert("FunctionsRouterMock: invalid subscription owner");
-        }
-        if (subscriptions[subscriptionId].owner != address(0)) {
-            revert("FunctionsRouterMock: subscription already set");
-        }
+    function addMockSubscription(uint64 subscriptionId, address owner) external onlyOwner {
+        require(owner != address(0), "FunctionsRouterMock: invalid subscription owner");
+        require(subscriptions[subscriptionId].owner == address(0), "FunctionsRouterMock: subscription already set");
         subscriptions[subscriptionId] = Subscription({owner: owner});
         emit SubscriptionAdded(subscriptionId, owner);
     }
