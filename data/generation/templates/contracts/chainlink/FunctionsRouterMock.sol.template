@@ -99,6 +99,66 @@ contract FunctionsRouterMock is IFunctionsRouter, Ownable {
         emit SubscriptionAdded(subscriptionId, owner);
     }
 
+    /**
+     * A request, which can be fulfilled or not.
+     */
+    struct Request {
+        /**
+         * The don id.
+         */
+        bytes32 donId;
+
+        /**
+         * The subscription id.
+         */
+        uint64 subscriptionId;
+
+        /**
+         * The address of the client contract.
+         */
+        address clientContract;
+
+        /**
+         * The transaction initiator.
+         */
+        address txInitiator;
+
+        /**
+         * The request data.
+         */
+        bytes data;
+
+        /**
+         * The data version.
+         */
+        uint16 dataVersion;
+
+        /**
+         * Whether it is fulfilled or not.
+         */
+        bool fulfilled;
+
+        /**
+         * The result code.
+         */
+        FunctionsResponse.FulfillResult result;
+
+        /**
+         * The response.
+         */
+        bytes response;
+
+        /**
+         * The error.
+         */
+        bytes err;
+    }
+
+    /**
+     * A mapping of mocked subscriptions.
+     */
+    mapping(bytes32 => Request) public requests;
+
     ////////////////////////////////////////////////////////////////
     //////// These methods serve for the mock's purpose:
     //////// Locally processing the function calls.
@@ -124,11 +184,12 @@ contract FunctionsRouterMock is IFunctionsRouter, Ownable {
     /**
      * Sends the event that tells that a request was generated.
      */
-    function _emitRequestProcessed(
-        bytes32 requestId, address subscriptionOwner,
-        bytes32 donId, uint64 subscriptionId, bytes memory data,
-        uint16 dataVersion, uint32 callbackGasLimit,
-        uint96 estimatedTotalCostJuels, bool toProposed
+    function _emitRequestStart(
+        bytes32 requestId, bytes32 donId,
+        uint64 subscriptionId, address subscriptionOwner,
+        bytes memory data, uint16 dataVersion,
+        uint32 callbackGasLimit, uint96 estimatedTotalCostJuels,
+        bool toProposed
     ) private {
         emit RequestStart({
             requestId: requestId,
@@ -157,7 +218,6 @@ contract FunctionsRouterMock is IFunctionsRouter, Ownable {
         bytes callbackReturnData
     );
 
-
     /**
      * Sends a request, in the common nodes.
      */
@@ -168,8 +228,20 @@ contract FunctionsRouterMock is IFunctionsRouter, Ownable {
         uint32 callbackGasLimit,
         bytes32 donId
     ) external returns (bytes32) {
-        // TODO implement.
-        return bytes32(0);
+        Subscription storage subscription = subscriptions[subscriptionId];
+        require(subscription.owner != address(0), "FunctionsRouterMock: invalid subscription");
+        bytes32 requestId = keccak256(abi.encodePacked(block.timestamp));
+        _emitRequestStart(
+            requestId, donId, subscriptionId, subscription.owner,
+            data, dataVersion, callbackGasLimit, 0, false
+        );
+        requests[requestId] = Request({
+            donId: donId, subscriptionId: subscriptionId, clientContract: msg.sender,
+            txInitiator: tx.origin, data: data, dataVersion: dataVersion, response: "",
+            err: "", fulfilled: false, result: FunctionsResponse.FulfillResult.USER_CALLBACK_ERROR
+            // Actually, the result will be changed later.
+        });
+        return requestId;
     }
 
     /**
