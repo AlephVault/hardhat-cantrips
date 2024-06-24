@@ -221,19 +221,20 @@ contract FunctionsRouterMock is IFunctionsRouter, Ownable {
     /**
      * Sends a request, in the common nodes.
      */
-    function sendRequest(
+    function _sendRequest(
         uint64 subscriptionId,
         bytes calldata data,
         uint16 dataVersion,
         uint32 callbackGasLimit,
-        bytes32 donId
-    ) external returns (bytes32) {
+        bytes32 donId,
+        bool toProposed
+    ) private returns (bytes32) {
         Subscription storage subscription = subscriptions[subscriptionId];
         require(subscription.owner != address(0), "FunctionsRouterMock: invalid subscription");
         bytes32 requestId = keccak256(abi.encodePacked(block.timestamp));
         _emitRequestStart(
             requestId, donId, subscriptionId, subscription.owner,
-            data, dataVersion, callbackGasLimit, 0, false
+            data, dataVersion, callbackGasLimit, 0, toProposed
         );
         requests[requestId] = Request({
             donId: donId, subscriptionId: subscriptionId, clientContract: msg.sender,
@@ -242,6 +243,19 @@ contract FunctionsRouterMock is IFunctionsRouter, Ownable {
             // Actually, the result will be changed later.
         });
         return requestId;
+    }
+
+    /**
+     * Sends a request, in the common nodes.
+     */
+    function sendRequest(
+        uint64 subscriptionId,
+        bytes calldata data,
+        uint16 dataVersion,
+        uint32 callbackGasLimit,
+        bytes32 donId
+    ) external returns (bytes32) {
+        return _sendRequest(subscriptionId, data, dataVersion, callbackGasLimit, donId, false);
     }
 
     /**
@@ -255,8 +269,7 @@ contract FunctionsRouterMock is IFunctionsRouter, Ownable {
         uint32 callbackGasLimit,
         bytes32 donId
     ) external returns (bytes32) {
-        // TODO implement.
-        return bytes32(0);
+        return _sendRequest(subscriptionId, data, dataVersion, callbackGasLimit, donId, true);
     }
 
     /**
