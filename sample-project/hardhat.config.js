@@ -1,4 +1,5 @@
 require("@nomicfoundation/hardhat-toolbox");
+require("hardhat-contract-sizer");
 require("..");
 
 /** @type import('hardhat/config').HardhatUserConfig */
