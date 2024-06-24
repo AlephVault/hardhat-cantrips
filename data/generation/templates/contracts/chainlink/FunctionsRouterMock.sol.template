@@ -1,0 +1,204 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.24;
+
+import "@chainlink/contracts/src/v0.8/functions/v1_0_0/interfaces/IFunctionsRouter.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+
+/**
+ * This is a mock over the IFunctionsRouter interface. It
+ * will capture the requests and process them in an external
+ * worker.
+ */
+contract FunctionsRouterMock is IFunctionsRouter, Ownable {
+    /**
+     * The constructor. Can be set up as needed.
+     */
+    constructor() Ownable(msg.sender) {
+        // Feel free to setup your router as you please.
+    }
+
+    // This mock does not care about allow lists.
+    function getAllowListId() external view returns (bytes32) {
+        return bytes32(0);
+    }
+
+    // This mock does not care about allow lists.
+    function setAllowListId(bytes32 allowListId) external {}
+
+    // This mock does not care about admin fees.
+    function getAdminFee() external view returns (uint72 adminFee) {
+        return uint72(0);
+    }
+
+    // There will be no concept of gas limit validation in this mock.
+    function isValidCallbackGasLimit(uint64 subscriptionId, uint32 callbackGasLimit) external view {}
+
+    // This mock does not care about contracts lists.
+    function getContractById(bytes32 id) external view returns (address) {
+        return address(0);
+    }
+
+    // This mock does not care about proposed contracts lists.
+    function getProposedContractById(bytes32 id) external view returns (address) {
+        return address(0);
+    }
+
+    // This mock does not care about proposed contracts lists.
+    function getProposedContractSet() external view returns (bytes32[] memory, address[] memory) {
+        return (new bytes32[](0), new address[](0));
+    }
+
+    // This mock does not care about proposed contracts.
+    function proposeContractsUpdate(bytes32[] memory proposalSetIds, address[] memory proposalSetAddresses) external {}
+
+    // This mock does not care about proposed contracts.
+    function updateContracts() external {}
+
+    // This mock does not care about pausing.
+    function pause() external {}
+
+    // This mock does not care about unpausing.
+    function unpause() external {}
+
+    ////////////////////////////////////////////////////////////////
+    //////// Some utilities to fake some concepts.
+    ////////////////////////////////////////////////////////////////
+
+    /**
+     * A mocked subscription.
+     */
+    struct Subscription {
+        /**
+         * The owner of the mocked subscription.
+         */
+        address owner;
+    }
+
+    /**
+     * This event is emitted to enumerate mocked subscriptions.
+     */
+    event SubscriptionAdded(uint64 indexed subscriptionId, address owner);
+
+    /**
+     * A mapping of mocked subscriptions.
+     */
+    mapping(uint64 => Subscription) public subscriptions;
+
+    /**
+     * Adds a mocked subscription.
+     */
+    function addMockSubscription(uint64 subscriptionId, address owner) external {
+        if (owner == address(0)) {
+            revert("FunctionsRouterMock: invalid subscription owner");
+        }
+        if (subscriptions[subscriptionId].owner != address(0)) {
+            revert("FunctionsRouterMock: subscription already set");
+        }
+        subscriptions[subscriptionId] = Subscription({owner: owner});
+        emit SubscriptionAdded(subscriptionId, owner);
+    }
+
+    ////////////////////////////////////////////////////////////////
+    //////// These methods serve for the mock's purpose:
+    //////// Locally processing the function calls.
+    ////////////////////////////////////////////////////////////////
+
+    /**
+     * Tells that a request was generated.
+     */
+    event RequestStart(
+        bytes32 indexed requestId,
+        bytes32 indexed donId,
+        uint64 indexed subscriptionId,
+        address subscriptionOwner,
+        address requestingContract,
+        address requestInitiator,
+        bytes data,
+        uint16 dataVersion,
+        uint32 callbackGasLimit,
+        uint96 estimatedTotalCostJuels,
+        bool toProposed
+    );
+
+    /**
+     * Sends the event that tells that a request was generated.
+     */
+    function _emitRequestProcessed(
+        bytes32 requestId, address subscriptionOwner,
+        bytes32 donId, uint64 subscriptionId, bytes memory data,
+        uint16 dataVersion, uint32 callbackGasLimit,
+        uint96 estimatedTotalCostJuels, bool toProposed
+    ) private {
+        emit RequestStart({
+            requestId: requestId,
+            donId: donId, subscriptionId: subscriptionId,
+            subscriptionOwner: subscriptionOwner,
+            requestingContract: msg.sender,
+            requestInitiator: tx.origin, data: data,
+            dataVersion: dataVersion,
+            callbackGasLimit: callbackGasLimit,
+            estimatedTotalCostJuels: estimatedTotalCostJuels,
+            toProposed: toProposed
+        });
+    }
+
+    /**
+     * Tells that a request was processed.
+     */
+    event RequestProcessed(
+        bytes32 indexed requestId,
+        uint64 indexed subscriptionId,
+        uint96 totalCostJuels,
+        address transmitter,
+        FunctionsResponse.FulfillResult resultCode,
+        bytes response,
+        bytes err,
+        bytes callbackReturnData
+    );
+
+
+    /**
+     * Sends a request, in the common nodes.
+     */
+    function sendRequest(
+        uint64 subscriptionId,
+        bytes calldata data,
+        uint16 dataVersion,
+        uint32 callbackGasLimit,
+        bytes32 donId
+    ) external returns (bytes32) {
+        // TODO implement.
+        return bytes32(0);
+    }
+
+    /**
+     * Sends a request, in the proposed nodes. This will only
+     * change an internal flag.
+     */
+    function sendRequestToProposed(
+        uint64 subscriptionId,
+        bytes calldata data,
+        uint16 dataVersion,
+        uint32 callbackGasLimit,
+        bytes32 donId
+    ) external returns (bytes32) {
+        // TODO implement.
+        return bytes32(0);
+    }
+
+    /**
+     * Fulfills a request
+     */
+    function fulfill(
+        bytes memory response,
+        bytes memory err,
+        uint96 juelsPerGas,
+        uint96 costWithoutFulfillment,
+        address transmitter,
+        FunctionsResponse.Commitment memory commitment
+    ) external onlyOwner returns (FunctionsResponse.FulfillResult, uint96) {
+        // TODO implement.
+        return (FunctionsResponse.FulfillResult.FULFILLED, uint96(0));
+    }
+}
