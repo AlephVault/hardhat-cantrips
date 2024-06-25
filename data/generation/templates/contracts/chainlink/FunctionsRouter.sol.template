@@ -1,3 +1,60 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 import "@chainlink/contracts/src/v0.8/functions/v1_0_0/FunctionsRouter.sol";
+
+/**
+ * This file makes FunctionsRouter available among your artifacts.
+ *
+ * The FunctionsRouter.sol file is built with Solidity 0.8.19, regardless
+ * the chosen version in this particular file. This contract requires the
+ * viaIR setting in true and more things related to the solc optimizer.
+ * Use these settings in your Hardhat configuration regarding Solidity.
+ * This example assumes a JS project with solc version 0.8.24:
+ *
+ module.exports = {
+   ...
+   solidity: {
+     compilers: [
+       {
+         version: "0.8.24",
+         settings: {
+           viaIR: true,
+           optimizer: {
+             enabled: true,
+             details: {
+               yulDetails: {
+                 optimizerSteps: "u"
+               }
+             }
+           }
+         }
+       }
+     ]
+   }
+ }
+ *
+ * Also, when instantiating this class, you can either deeply study
+ * Chainlink settings or locally tune yours. In this example, these
+ * arguments come from the transaction that instantiated them into
+ * Sepolia testnet:
+ *
+ * 1. address: 0x779877A7B0D9E8603169DdbD7836e478b4624789 (you'll change
+ *    this with your localnet-deployed LinkToken, if any, which is
+ *    also available in this package.
+ * 2. tuple: // config
+ *    2.1. uint16: 100 // max. consumers per subscription.
+ *    2.2. uint72: 0 // admin fee.
+ *    2.3. bytes4: '0x' // callback selector.
+ *    2.4. uint16: 5000 // gas for call exact check.
+ *    2.5. uint32[]: // maxCallbackGasLimits.
+ *         300000, 500000, 750000, 1000000,
+ *         1500000, 2000000, 2500000, 3000000,
+ *         3500000, 4000000, 4500000, 5000000
+ *    2.6. uint16: 1 // subscriptionDepositMinimumRequests
+ *    2.7. uint72: 1000000000000000000 // subscriptionDepositJuels
+ *
+ * Take these settings as cargo cult, since you'll rarely need to modify them
+ * given that these are only intended for development (You'll typically never
+ * need to deploy this in production yourself but instead you'll use those
+ * that already exist given by Chainlink).
+ */
