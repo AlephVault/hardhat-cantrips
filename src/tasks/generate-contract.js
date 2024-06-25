@@ -81,10 +81,15 @@ const OPTIONS = [
     {name: "ERC1155", message: "A regular, OpenZeppelin-powered, ERC1155 contract file"},
     {name: "OwnedERC1155", message: "An owned, OpenZeppelin-powered, ERC1155 contract file"},
     {name: "PriceFeed", message: "A ChainLink PriceFeed contract mock file"},
-    {name: "FunctionsClient", message: "A ChainLink FunctionsClient contract file"}
+    {name: "FunctionsClient", message: "A ChainLink FunctionsClient contract file"},
+    {name: "FunctionsRouter", message: "A ChainLink FunctionsRouter contract mock file"},
+    {name: "LinkToken", message: "A ChainLink LinkToken contract mock file"}
 ]
 
 
+/**
+ * The file paths for each option contract.
+ */
 const PATHS = {
     ERC20: "contracts/ERC20",
     OwnedERC20: "contracts/OwnedERC20",
@@ -94,6 +99,17 @@ const PATHS = {
     OwnedERC1155: "contracts/OwnedERC1155",
     PriceFeed: "contracts/chainlink/PriceFeed",
     FunctionsClient: "contracts/chainlink/FunctionsClient",
+    FunctionsRouter: "contracts/chainlink/FunctionsRouter",
+    LinkToken: "contracts/chainlink/LinkToken",
+}
+
+
+/**
+ * Whether a name can be given to the contract or not.
+ */
+const NO_RENAME = {
+    FunctionsRouter: true,
+    LinkToken: true
 }
 
 
@@ -164,7 +180,9 @@ cantripsScope.task("generate-contract", "Generates a contract file from a suppor
             solidityVersion = (solidityVersion || "").trim();
             const contractsPath = hre.config.paths.sources;
             const contractType_ = await selectContractType(contractType, forceNonInteractive);
-            const contractName_ = validateContractName(contractName) || await inputContractName(contractType_, forceNonInteractive);
+            const contractName_ = NO_RENAME[contractType_] ?
+                contractType_ :
+                validateContractName(contractName) || await inputContractName(contractType_, forceNonInteractive);
             const solidityVersion_ = await selectSolidityVersion(solidityVersion, forceNonInteractive, hre);
             const contractPath = PATHS[contractType_];
             const sourceTemplate = `${contractPath}.sol.template`;
