@@ -1,4 +1,3 @@
-const {task, scope} = require("hardhat/config");
 const {applyTemplate} = require("../utils/templates");
 const enquirer = require("enquirer");
 const path = require("path");
@@ -92,7 +91,7 @@ cantripsScope.task("generate-deployment", "Generates a deployment file for an ex
     .addOptionalParam("reference", "Generates an m.contractAt future to the specified address instead of an m.contract future")
     .addOptionalParam("chainId", "Create this deployment chain-specific for a given chain")
     .addFlag("forceNonInteractive", "Raise an error if one or more params were not specified and the action would become interactive")
-    .setAction(async ({ contractName, reference, chainId, moduleName, forceNonInteractive }, hre, runSuper) => {
+    .setAction(async ({contractName, reference, chainId, moduleName, forceNonInteractive}, hre, runSuper) => {
         try {
             contractName = (contractName || "").trim();
             moduleName = (moduleName || "").trim();
