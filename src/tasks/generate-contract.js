@@ -80,7 +80,7 @@ const OPTIONS = [
     {name: "OwnedERC721", message: "An owned, OpenZeppelin-powered, ERC721 contract file"},
     {name: "ERC1155", message: "A regular, OpenZeppelin-powered, ERC1155 contract file"},
     {name: "OwnedERC1155", message: "An owned, OpenZeppelin-powered, ERC1155 contract file"},
-    {name: "PriceFeed", message: "A ChainLink PriceFeed contract mock file"},
+    {name: "AggregatorV3", message: "A ChainLink AggregatorV3 contract mock file"},
     {name: "FunctionsClient", message: "A ChainLink FunctionsClient contract file"},
     {name: "FunctionsRouter", message: "A ChainLink FunctionsRouter contract mock file"},
     {name: "LinkToken", message: "A ChainLink LinkToken contract mock file"}
@@ -97,7 +97,7 @@ const PATHS = {
     OwnedERC721: "contracts/OwnedERC721",
     ERC1155: "contracts/ERC1155",
     OwnedERC1155: "contracts/OwnedERC1155",
-    PriceFeed: "contracts/chainlink/PriceFeed",
+    AggregatorV3: "contracts/chainlink/AggregatorV3",
     FunctionsClient: "contracts/chainlink/FunctionsClient",
     FunctionsRouter: "contracts/chainlink/FunctionsRouter",
     LinkToken: "contracts/chainlink/LinkToken",
