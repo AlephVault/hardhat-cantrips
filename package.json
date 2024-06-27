@@ -29,9 +29,7 @@
     "ipfs": "^0.66.1"
   },
   "peerDependencies": {
+    "enquirer": "^2.4.1",
     "hardhat": "^2.22.5"
-  },
-  "dependencies": {
-    "enquirer": "^2.4.1"
   }
 }
