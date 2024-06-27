@@ -18,7 +18,7 @@ async function launchIPFSGateway(rootDirectory) {
     async function addToIPFS(filePath) {
         const content = fs.readFileSync(filePath);
         const fileAdded = await ipfs.add({ path: filePath.substring(relativeDirStart), content });
-        console.log(`Added ${filePath}: ${fileAdded.cid}`);
+        console.log(`File CID: ${fileAdded.cid}`);
     }
 
     // Watcher for the filesystem.
