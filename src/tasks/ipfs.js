@@ -10,11 +10,15 @@ cantripsScope
     .setAction(async (_, hre, runSuper) => {
         try {
             // Get or create the ".local/ipfs-root" project directory.
-            const ipfsDirectory = path.resolve(hre.config.paths.root, ".local", "ipfs-root");
-            fs.mkdirSync(ipfsDirectory, {recursive: true});
+            const ipfsContentDirectory = path.resolve(hre.config.paths.root, ".local", "ipfs-root", "content");
+            const ipfsRepoDirectory = path.resolve(hre.config.paths.root, ".local", "ipfs-root", "repo");
+            fs.mkdirSync(ipfsContentDirectory, {recursive: true});
+            fs.mkdirSync(ipfsRepoDirectory, {recursive: true});
 
             // Launch the IPFS server.
-            const {watcher, ipfs} = await launchIPFSGateway(ipfsDirectory);
+            const {watcher, ipfs, gateway, api} = await launchIPFSGateway(
+                ipfsContentDirectory, ipfsRepoDirectory
+            );
             console.log("IPFS server started");
 
             // Wait for a key to be pressed.
@@ -26,6 +30,8 @@ cantripsScope
             // Close everything.
             watcher.close();
             await ipfs.stop();
+            await api.stop();
+            await gateway.stop();
             console.log("IPFS server stopped");
         } catch(e) {
             console.error("There was an error running the IPFS node:");

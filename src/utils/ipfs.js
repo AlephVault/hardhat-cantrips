@@ -3,18 +3,45 @@ const fs = require('fs');
 const path = require('path');
 
 
-async function launchIPFSGateway(rootDirectory) {
-    // Creating the IPFS server.
-    const IPFS = await import('ipfs-core');
-    const ipfs = await IPFS.create();
-
+async function launchIPFSGateway(
+    contentDirectory, repoDirectory,
+    gatewayPort = 8080, apiPort = 5001, swarmPort = 4001
+) {
     // Normalizing the root directory.
-    if (rootDirectory.endsWith('/')) {
-        rootDirectory = rootDirectory.substring(0, rootDirectory.length - 1);
+    if (contentDirectory.endsWith('/')) {
+        contentDirectory = contentDirectory.substring(0, contentDirectory.length - 1);
     }
-    const relativeDirStart = rootDirectory.length + 1;
+
+    // Creating the IPFS server (core, api, gateway).
+    const IPFS = await import('ipfs');
+    const {HttpGateway: Gateway} = await import('ipfs-http-gateway');
+    const {HttpApi: Api} = await import('ipfs-http-server');
+    const ipfs = await IPFS.create({
+        repo: repoDirectory,
+        config: {
+            Addresses: {
+                Swarm: [
+                    `/ip4/0.0.0.0/tcp/${swarmPort}`,
+                    `/ip6/::/tcp/${swarmPort}`
+                ],
+                API: `/ip4/127.0.0.1/tcp/${apiPort}`,
+                Gateway: `/ip4/127.0.0.1/tcp/${gatewayPort}`
+            }
+        }
+    });
+    const gateway = new Gateway(ipfs, {
+        httpGateway: true,
+        port: gatewayPort
+    });
+    await gateway.start();
+    const api = new Api(ipfs, {
+        port: apiPort
+    });
+    await api.start();
+
 
     // Function to add a file to IPFS.
+    const relativeDirStart = contentDirectory.length + 1;
     async function addToIPFS(filePath) {
         const content = fs.readFileSync(filePath);
         const fileAdded = await ipfs.add({ path: filePath.substring(relativeDirStart), content });
@@ -22,7 +49,7 @@ async function launchIPFSGateway(rootDirectory) {
     }
 
     // Watcher for the filesystem.
-    const watcher = chokidar.watch(rootDirectory, { persistent: true });
+    const watcher = chokidar.watch(contentDirectory, { persistent: true });
 
     watcher
         .on('add', async filePath => {
@@ -55,9 +82,9 @@ async function launchIPFSGateway(rootDirectory) {
             }
         });
 
-    // Return both running objects.
+    // Return the 4 running objects.
     return {
-        ipfs, watcher
+        ipfs, watcher, api, gateway
     }
 }
 

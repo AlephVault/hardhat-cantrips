@@ -13,7 +13,8 @@
   "description": "",
   "dependencies": {
     "hardhat": "^2.22.5",
-    "hardhat-cantrips": "file:.."
+    "hardhat-cantrips": "file:..",
+    "ipfs": "^0.66.1"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^5.0.0",
