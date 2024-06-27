@@ -1,4 +1,3 @@
-const IPFS = require('ipfs-core');
 const chokidar = require('chokidar');
 const fs = require('fs');
 const path = require('path');
@@ -6,6 +5,7 @@ const path = require('path');
 
 async function launchIPFSGateway(rootDirectory) {
     // Creating the IPFS server.
+    const IPFS = await import('ipfs-core');
     const ipfs = await IPFS.create();
 
     // Normalizing the root directory.
