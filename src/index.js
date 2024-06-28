@@ -6,4 +6,3 @@ require("./tasks/ownership");
 require("./tasks/erc20");
 require("./tasks/erc721");
 require("./tasks/erc1155");
-require("./tasks/ipfs");
