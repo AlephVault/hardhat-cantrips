@@ -64,7 +64,6 @@ async function selectContract(contractName, forceNonInteractive, hre) {
  * @param deploymentName The contract name.
  * @returns {*|string} Either the same contract name or, if not valid, "".
  */
-
 function validateDeploymentName(deploymentName) {
     return /^[A-Za-z][A-Za-z0-9]*$/.test(deploymentName) ? deploymentName : ""
 }
@@ -85,13 +84,47 @@ function inputDeploymentName(contractName, forceNonInteractive) {
 }
 
 
+/**
+ * Validates the scopeType option.
+ * @param scopeType The scope type.
+ * @returns {*|string} Either the same scope type or "" if it is not valid.
+ */
+function validateScopeType(scopeType) {
+    if (scopeType === "specific" || scopeType === "default") {
+        return scopeType;
+    } else {
+        return "";
+    }
+}
+
+
+/**
+ * Selects a scope type for a deployment.
+ * @param network The network (the current one).
+ * @param forceNonInteractive Whether to raise an error in this interactive method.
+ * @returns {Promise<*>} The scope type (async function).
+ */
+async function selectScopeType(network, forceNonInteractive) {
+    checkNotInteractive(forceNonInteractive);
+    let prompt = new enquirer.Select({
+        name: "scopeType",
+        message: "What's this deployment intended for?",
+        choices: [
+            {name: "specific", message: "A chain-specific deployment for the network: " + network},
+            {name: "default", message: "A general/default deployment"}
+        ]
+    });
+    return await prompt.run();
+}
+
+
 cantripsScope.task("generate-deployment", "Generates a deployment file for an existing contract")
     .addOptionalParam("contractName", "An optional existing contract name")
     .addOptionalParam("moduleName", "An optional ignition module name")
     .addOptionalParam("reference", "Generates an m.contractAt future to the specified address instead of an m.contract future")
-    .addOptionalParam("chainId", "Create this deployment chain-specific for a given chain")
+    .addOptionalParam("scopeType", "Whether it is intended for the given --network (specific) or for the general case (default)")
     .addFlag("forceNonInteractive", "Raise an error if one or more params were not specified and the action would become interactive")
-    .setAction(async ({contractName, reference, chainId, moduleName, forceNonInteractive}, hre, runSuper) => {
+    .setAction(async ({contractName, reference, scopeType, moduleName, forceNonInteractive}, hre, runSuper) => {
         try {
             contractName = (contractName || "").trim();
             moduleName = (moduleName || "").trim();
@@ -99,12 +132,13 @@ cantripsScope.task("generate-deployment", "Generates a deployment file for an ex
             await hre.run("compile");
             const contractName_ = await selectContract(contractName, forceNonInteractive, hre);
             const moduleName_ = validateDeploymentName(moduleName) || await inputDeploymentName(contractName_, forceNonInteractive);
+            const chainId = (await hre.ethers.provider.getNetwork()).chainId;
+            scopeType = validateScopeType(scopeType) || await selectScopeType(hre.network.name, forceNonInteractive);
 
             const sourceTemplate = reference ? "ignition/ContractReference.js.template" :
                 "ignition/ContractCreation.js.template";
-            const parsedChainId = (chainId || 0) && parseChainId(chainId);
             const targetPath = path.resolve(
-                ignitionPath, parsedChainId ? `${moduleName_}-${parsedChainId}.js` : `${moduleName_}.js`
+                ignitionPath, scopeType === "specific" ? `${moduleName_}-${chainId}.js` : `${moduleName_}.js`
             );
             const replacements = {
                 MODULE_NAME: moduleName_,
