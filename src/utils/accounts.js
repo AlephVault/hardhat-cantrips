@@ -55,7 +55,7 @@ async function parseSmartAddress(account, hre) {
  * @returns {*|string}
  */
 function parseAddress(address, hre) {
-    if (/^0x[a-fA-F0-9]$/.test(address)) {
+    if (/^0x[a-fA-F0-9]{40}$/.test(address)) {
         try {
             return hre.ethers.getAddress(address);
         } catch(e) {

@@ -120,21 +120,33 @@ async function selectScopeType(network, forceNonInteractive) {
 cantripsScope.task("generate-deployment", "Generates a deployment file for an existing contract")
     .addOptionalParam("contractName", "An optional existing contract name")
     .addOptionalParam("moduleName", "An optional ignition module name")
-    .addOptionalParam("reference", "Generates an m.contractAt future to the specified address instead of an m.contract future")
+    .addOptionalParam("reference", "Tells the reference type, which can either be a new contract (new) or referencing an existing contract (an address)")
     .addOptionalParam("scopeType", "Whether it is intended for the given --network (specific) or for the general case (default)")
     .addFlag("forceNonInteractive", "Raise an error if one or more params were not specified and the action would become interactive")
     .setAction(async ({contractName, reference, scopeType, moduleName, forceNonInteractive}, hre, runSuper) => {
         try {
             contractName = (contractName || "").trim();
             moduleName = (moduleName || "").trim();
+            reference = (reference || "").trim();
+            scopeType = (scopeType || "").trim();
             const ignitionPath = path.resolve(hre.config.paths.root, "ignition", "modules");
             await hre.run("compile");
             const contractName_ = await selectContract(contractName, forceNonInteractive, hre);
             const moduleName_ = validateDeploymentName(moduleName) || await inputDeploymentName(contractName_, forceNonInteractive);
             const chainId = (await hre.ethers.provider.getNetwork()).chainId;
             scopeType = validateScopeType(scopeType) || await selectScopeType(hre.network.name, forceNonInteractive);
-
-            const sourceTemplate = reference ? "ignition/ContractReference.js.template" :
+            if (reference !== "new" && !/^0x[a-fA-F0-9]{40}$/.test(reference)) {
+                if (scopeType === "default") {
+                    reference = "new";
+                } else {
+                    reference = await inputUntil(
+                        "", "Enter the existing contract's address:", (v) => {
+                            return /^0x[a-fA-F0-9]{40}$/.test(v);
+                        }, "Invalid address", forceNonInteractive
+                    );
+                }
+            }
+            const sourceTemplate = reference !== "new" ? "ignition/ContractReference.js.template" :
                 "ignition/ContractCreation.js.template";
             const targetPath = path.resolve(
                 ignitionPath, scopeType === "specific" ? `${moduleName_}-${chainId}.js` : `${moduleName_}.js`
@@ -142,7 +154,7 @@ cantripsScope.task("generate-deployment", "Generates a deployment file for an ex
             const replacements = {
                 MODULE_NAME: moduleName_,
                 CONTRACT_NAME: contractName_,
-                CONTRACT_ADDRESS: reference && parseAddress(reference, hre)
+                CONTRACT_ADDRESS: reference !== "new" ? reference : ""
             }
             applyTemplate(sourceTemplate, replacements, targetPath);
             console.log(`Deployment ${targetPath} successfully created.`);
