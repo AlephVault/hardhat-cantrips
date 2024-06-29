@@ -7,7 +7,6 @@ const {inputUntil} = require("../utils/input");
 const {collectContractNames} = require("../utils/contracts");
 const {parseAddress} = require("../utils/accounts");
 const {checkNotInteractive} = require("../utils/common");
-const {parseChainId} = require("../utils/chains");
 
 
 /**
